@@ -7,7 +7,7 @@
 	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageProjectUrl>http://www.penguinms.com/Nuget</PackageProjectUrl>
     <PackageIconUrl>http://www.penguinms.com/client/images/pg.png</PackageIconUrl>
-    <Version>3.12.0</Version>
+    <Version>3.13.0</Version>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>Super helpful Reflection methods for Caching, as well as a static class designed to greatly simplify and speed up reflective searching. Supports (requires, for now) whitelisting assemblies and provides methods such as GetAllImplementations, GetAllTypes, GetDerivedTypes, GetMostDerivedType, GetTypeByFullName and more. Very helpful in MetaData driven systems.</Description>
@@ -24,6 +24,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Penguin.Debugging" Version="1.0.0" />
     <PackageReference Include="Penguin.Reflection.Abstractions" Version="2.0.6" />
   </ItemGroup>
 

@@ -74,11 +74,6 @@
             A static class used to perform all kinds of type based reflections over a whitelist of assemblies for finding and resolving many kinds of queries
             </summary>
         </member>
-        <member name="P:Penguin.Reflection.TypeFactory.Log">
-            <summary>
-            Provides a log for debugging type loading
-            </summary>
-        </member>
         <member name="M:Penguin.Reflection.TypeFactory.#cctor">
             <summary>
             Since everything is cached, we need to make sure ALL potential assemblies are loaded or we might end up missing classes because

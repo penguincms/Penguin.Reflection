@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using Penguin.Debugging;
 
 namespace Penguin.Reflection
 {
@@ -16,11 +17,6 @@ namespace Penguin.Reflection
     public static class TypeFactory
     {
         #region Properties
-
-        /// <summary>
-        /// Provides a log for debugging type loading
-        /// </summary>
-        public static Action<string> Log { get; set; }
 
         #endregion Properties
 
@@ -70,11 +66,8 @@ namespace Penguin.Reflection
         /// </summary>
         static TypeFactory()
         {
-            List<string> toLog = new List<string>()
-            {
-                $"Penguin.Reflection: {Assembly.GetExecutingAssembly().GetName().Version}"
-            };
 
+            StaticLogger.Log($"Penguin.Reflection: {Assembly.GetExecutingAssembly().GetName().Version}", StaticLogger.LoggingLevel.Call);
 
             List<string> failedCache = LoadFailedCache();
             List<string> blacklist = LoadBlacklistCache();
@@ -84,8 +77,7 @@ namespace Penguin.Reflection
 
             List<string> referencedPaths = new List<string>();
 
-            Log?.Invoke($"Dynamically loading assemblys from {AppDomain.CurrentDomain.BaseDirectory}");
-            toLog.Add($"Dynamically loading assemblys from {AppDomain.CurrentDomain.BaseDirectory}");
+            StaticLogger.Log($"Dynamically loading assemblys from {AppDomain.CurrentDomain.BaseDirectory}", StaticLogger.LoggingLevel.Call);
 
             referencedPaths.AddRange(Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll"));
 
@@ -104,11 +96,9 @@ namespace Penguin.Reflection
                 string matchingLine = blacklist.FirstOrDefault(b => Regex.IsMatch(Path.GetFileName(loadPath), b));
                 if (!string.IsNullOrWhiteSpace(matchingLine))
                 {
-                    string log = $"Skipping assembly due to blacklist match ({matchingLine}) {loadPath}";     
-                    
-                    Log?.Invoke(log);
+                    string log = $"Skipping assembly due to blacklist match ({matchingLine}) {loadPath}";
 
-                    toLog.Add(log);
+                    StaticLogger.Log(log, StaticLogger.LoggingLevel.Call);
 
                     continue;
                 }
@@ -116,17 +106,20 @@ namespace Penguin.Reflection
 
                 try
                 {
-                    Log?.Invoke($"Dynamically loading assembly {loadPath}");
-                    toLog.Add($"Dynamically loading assembly {loadPath}");
+                    StaticLogger.Log($"Dynamically loading assembly {loadPath}", StaticLogger.LoggingLevel.Call);
+
                     loadedAssemblies.Add(AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(loadPath)));
                 }
                 catch (Exception ex)
                 {
-                    Log?.Invoke(ex.Message);
-                    Log?.Invoke(ex.StackTrace);
+                    StaticLogger.Log(ex.Message, StaticLogger.LoggingLevel.Call);
+                    StaticLogger.Log(ex.StackTrace, StaticLogger.LoggingLevel.Call);
+
                     failedCache.Add(loadPath);
                 }
             }
+
+            StaticLogger.Log($"{nameof(TypeFactory)} static initialization completed", StaticLogger.LoggingLevel.Final);
 
             File.WriteAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE), failedCache);
         }
@@ -159,7 +152,7 @@ namespace Penguin.Reflection
             {
                 foreach (Type t in GetAssemblyTypes(a))
                 {
-                    Log?.Invoke($"Found type {t.Name}");
+                    StaticLogger.Log($"Found type {t.Name}", StaticLogger.LoggingLevel.Call);
                     yield return t;
                 }
             }
@@ -172,7 +165,7 @@ namespace Penguin.Reflection
         /// <returns>All the types in the assembly</returns>
         public static IEnumerable<Type> GetAssemblyTypes(Assembly a)
         {
-            Log?.Invoke($"Getting types for assembly {a.FullName}");
+            StaticLogger.Log($"Getting types for assembly {a.FullName}", StaticLogger.LoggingLevel.Call);
             if (!AssemblyTypes.ContainsKey(a.FullName))
             {
                 List<Type> types = null;
@@ -183,7 +176,7 @@ namespace Penguin.Reflection
                 }
                 catch (ReflectionTypeLoadException ex)
                 {
-                    Log?.Invoke(ex.Message);
+                    StaticLogger.Log(ex.Message, StaticLogger.LoggingLevel.Call);
                     Console.WriteLine(ex.Message);
                     Console.WriteLine(ex.StackTrace);
 
@@ -202,18 +195,18 @@ namespace Penguin.Reflection
                             }
                             catch (Exception exxx)
                             {
-                                Log?.Invoke("Failed to load type: " + exxx.Message);
+                                StaticLogger.Log("Failed to load type: " + exxx.Message, StaticLogger.LoggingLevel.Call);
                             }
                         }
                     }
                     catch (Exception exx)
                     {
-                        Log?.Invoke("Failed to enumerate loaded types: " + exx.Message);
+                        StaticLogger.Log("Failed to enumerate loaded types: " + exx.Message, StaticLogger.LoggingLevel.Call);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log?.Invoke(ex.Message);
+                    StaticLogger.Log(ex.Message, StaticLogger.LoggingLevel.Call);
                     Console.WriteLine(ex.Message);
                     Console.WriteLine(ex.StackTrace);
                     types = new List<Type>();
@@ -241,10 +234,10 @@ namespace Penguin.Reflection
                 throw new ArgumentException($"Type to check for can not be interface as this method uses 'IsSubclassOf'. To search for interfaces use {nameof(GetAllImplementations)}");
             }
 
-            Log?.Invoke($"Checking for derived types for {t.Name}");
+            StaticLogger.Log($"Checking for derived types for {t.Name}", StaticLogger.LoggingLevel.Call);
             if (DerivedTypes.ContainsKey(t))
             {
-                Log?.Invoke($"Using cached results");
+                StaticLogger.Log($"Using cached results", StaticLogger.LoggingLevel.Call);
                 foreach (Type toReturn in DerivedTypes[t])
                 {
                     yield return toReturn;
@@ -258,12 +251,12 @@ namespace Penguin.Reflection
                 {
                     if (type.IsSubclassOf(t) && type.Module.ScopeName != "EntityProxyModule")
                     {
-                        Log?.Invoke($"Type {type.AssemblyQualifiedName} derives from {t.AssemblyQualifiedName}");
+                        StaticLogger.Log($"Type {type.AssemblyQualifiedName} derives from {t.AssemblyQualifiedName}", StaticLogger.LoggingLevel.Call);
                         typesToReturn.Add(type);
                     }
                     else
                     {
-                        Log?.Invoke($"Type {type.AssemblyQualifiedName} does not derive from {t.AssemblyQualifiedName}");
+                        StaticLogger.Log($"Type {type.AssemblyQualifiedName} does not derive from {t.AssemblyQualifiedName}", StaticLogger.LoggingLevel.Call);
                     }
                 }
 
