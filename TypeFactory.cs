@@ -237,7 +237,7 @@ namespace Penguin.Reflection
             StaticLogger.Log($"Checking for derived types for {t.Name}", StaticLogger.LoggingLevel.Call);
             if (DerivedTypes.ContainsKey(t))
             {
-                StaticLogger.Log($"Using cached results", StaticLogger.LoggingLevel.Call);
+                StaticLogger.Log($"Using cached results", StaticLogger.LoggingLevel.Method);
                 foreach (Type toReturn in DerivedTypes[t])
                 {
                     yield return toReturn;
@@ -262,11 +262,14 @@ namespace Penguin.Reflection
 
                 DerivedTypes.TryAdd(t, typesToReturn.ToList());
 
+                StaticLogger.Log("Finished type search", StaticLogger.LoggingLevel.Method);
+
                 foreach (Type toReturn in typesToReturn)
                 {
                     yield return toReturn;
                 }
             }
+           
         }
 
         /// <summary>
