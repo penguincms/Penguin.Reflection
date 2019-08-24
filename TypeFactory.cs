@@ -96,9 +96,7 @@ namespace Penguin.Reflection
                 string matchingLine = blacklist.FirstOrDefault(b => Regex.IsMatch(Path.GetFileName(loadPath), b));
                 if (!string.IsNullOrWhiteSpace(matchingLine))
                 {
-                    string log = $"Skipping assembly due to blacklist match ({matchingLine}) {loadPath}";
-
-                    StaticLogger.Log(log, StaticLogger.LoggingLevel.Call);
+                    StaticLogger.Log($"Skipping assembly due to blacklist match ({matchingLine}) {loadPath}", StaticLogger.LoggingLevel.Call);
 
                     continue;
                 }
@@ -152,7 +150,6 @@ namespace Penguin.Reflection
             {
                 foreach (Type t in GetAssemblyTypes(a))
                 {
-                    StaticLogger.Log($"Found type {t.Name}", StaticLogger.LoggingLevel.Call);
                     yield return t;
                 }
             }
@@ -212,14 +209,30 @@ namespace Penguin.Reflection
                     types = new List<Type>();
                 }
 
+                if(StaticLogger.Level != StaticLogger.LoggingLevel.None)
+                {
+                    foreach(Type t in types)
+                    {
+                        StaticLogger.Log($"Found type {t.FullName}", StaticLogger.LoggingLevel.Call);
+                    }
+                }
+
                 AssemblyTypes.TryAdd(a.FullName, types);
 
                 return types.ToList();
             }
             else
             {
+                StaticLogger.Log($"Using cached types for {a.FullName}", StaticLogger.LoggingLevel.Call);
                 return AssemblyTypes[a.FullName];
             }
+        }
+
+        private static string FriendlyTypeName(Type t)
+        {
+            AssemblyName an = t.Assembly.GetName();
+
+            return $"{t.FullName} [{an.Name} v{an.Version}]";
         }
 
         /// <summary>
@@ -251,12 +264,19 @@ namespace Penguin.Reflection
                 {
                     if (type.IsSubclassOf(t) && type.Module.ScopeName != "EntityProxyModule")
                     {
-                        StaticLogger.Log($"Type {type.AssemblyQualifiedName} derives from {t.AssemblyQualifiedName}", StaticLogger.LoggingLevel.Call);
+                        if (StaticLogger.Level != StaticLogger.LoggingLevel.None)
+                        {
+                            StaticLogger.Log($"RE: {FriendlyTypeName(t)} :: {FriendlyTypeName(type)}", StaticLogger.LoggingLevel.Call);
+                        }
+
                         typesToReturn.Add(type);
                     }
                     else
                     {
-                        StaticLogger.Log($"Type {type.AssemblyQualifiedName} does not derive from {t.AssemblyQualifiedName}", StaticLogger.LoggingLevel.Call);
+                        if (StaticLogger.Level != StaticLogger.LoggingLevel.None)
+                        {
+                            StaticLogger.Log($"RE: {FriendlyTypeName(t)} !: {FriendlyTypeName(type)}", StaticLogger.LoggingLevel.Call);
+                        }
                     }
                 }
 
