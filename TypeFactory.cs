@@ -77,7 +77,7 @@ namespace Penguin.Reflection
 
             List<string> referencedPaths = new List<string>();
 
-            StaticLogger.Log($"Dynamically loading assemblys from {AppDomain.CurrentDomain.BaseDirectory}", StaticLogger.LoggingLevel.Call);
+            StaticLogger.Log($"RE: Dynamically loading assemblys from {AppDomain.CurrentDomain.BaseDirectory}", StaticLogger.LoggingLevel.Call);
 
             referencedPaths.AddRange(Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll"));
 
@@ -90,13 +90,14 @@ namespace Penguin.Reflection
                 
                 if (failedCache.Contains(loadPath))
                 {
+                    StaticLogger.Log($"RE: Skipping due {FAILED_CACHE}: {loadPath}", StaticLogger.LoggingLevel.Call);
                     continue;
                 }
                 //Check for blacklist
                 string matchingLine = blacklist.FirstOrDefault(b => Regex.IsMatch(Path.GetFileName(loadPath), b));
                 if (!string.IsNullOrWhiteSpace(matchingLine))
                 {
-                    StaticLogger.Log($"Skipping assembly due to blacklist match ({matchingLine}) {loadPath}", StaticLogger.LoggingLevel.Call);
+                    StaticLogger.Log($"RE: Skipping assembly due to blacklist match ({matchingLine}) {loadPath}", StaticLogger.LoggingLevel.Call);
 
                     continue;
                 }
@@ -104,7 +105,7 @@ namespace Penguin.Reflection
 
                 try
                 {
-                    StaticLogger.Log($"Dynamically loading assembly {loadPath}", StaticLogger.LoggingLevel.Call);
+                    StaticLogger.Log($"RE: Dynamically loading assembly {loadPath}", StaticLogger.LoggingLevel.Call);
 
                     loadedAssemblies.Add(AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(loadPath)));
                 }
@@ -117,7 +118,7 @@ namespace Penguin.Reflection
                 }
             }
 
-            StaticLogger.Log($"{nameof(TypeFactory)} static initialization completed", StaticLogger.LoggingLevel.Final);
+            StaticLogger.Log($"RE: {nameof(TypeFactory)} static initialization completed", StaticLogger.LoggingLevel.Final);
 
             File.WriteAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE), failedCache);
         }
@@ -162,9 +163,10 @@ namespace Penguin.Reflection
         /// <returns>All the types in the assembly</returns>
         public static IEnumerable<Type> GetAssemblyTypes(Assembly a)
         {
-            StaticLogger.Log($"Getting types for assembly {a.FullName}", StaticLogger.LoggingLevel.Call);
             if (!AssemblyTypes.ContainsKey(a.FullName))
             {
+                StaticLogger.Log($"RE: Getting types for assembly {a.FullName}", StaticLogger.LoggingLevel.Call);
+
                 List<Type> types = null;
 
                 try
@@ -192,13 +194,13 @@ namespace Penguin.Reflection
                             }
                             catch (Exception exxx)
                             {
-                                StaticLogger.Log("Failed to load type: " + exxx.Message, StaticLogger.LoggingLevel.Call);
+                                StaticLogger.Log("RE: Failed to load type: " + exxx.Message, StaticLogger.LoggingLevel.Call);
                             }
                         }
                     }
                     catch (Exception exx)
                     {
-                        StaticLogger.Log("Failed to enumerate loaded types: " + exx.Message, StaticLogger.LoggingLevel.Call);
+                        StaticLogger.Log("RE: Failed to enumerate loaded types: " + exx.Message, StaticLogger.LoggingLevel.Call);
                     }
                 }
                 catch (Exception ex)
@@ -213,7 +215,7 @@ namespace Penguin.Reflection
                 {
                     foreach(Type t in types)
                     {
-                        StaticLogger.Log($"Found type {t.FullName}", StaticLogger.LoggingLevel.Call);
+                        StaticLogger.Log($"RE: Found type {t.FullName}", StaticLogger.LoggingLevel.Call);
                     }
                 }
 
@@ -223,7 +225,7 @@ namespace Penguin.Reflection
             }
             else
             {
-                StaticLogger.Log($"Using cached types for {a.FullName}", StaticLogger.LoggingLevel.Call);
+                StaticLogger.Log($"RE: Using cached types for {a.FullName}", StaticLogger.LoggingLevel.Call);
                 return AssemblyTypes[a.FullName];
             }
         }
@@ -247,10 +249,10 @@ namespace Penguin.Reflection
                 throw new ArgumentException($"Type to check for can not be interface as this method uses 'IsSubclassOf'. To search for interfaces use {nameof(GetAllImplementations)}");
             }
 
-            StaticLogger.Log($"Checking for derived types for {t.Name}", StaticLogger.LoggingLevel.Call);
+
             if (DerivedTypes.ContainsKey(t))
             {
-                StaticLogger.Log($"Using cached results", StaticLogger.LoggingLevel.Method);
+                StaticLogger.Log($"RE: Using cached derived types for {FriendlyTypeName(t)}", StaticLogger.LoggingLevel.Method);
                 foreach (Type toReturn in DerivedTypes[t])
                 {
                     yield return toReturn;
@@ -258,6 +260,8 @@ namespace Penguin.Reflection
             }
             else
             {
+                StaticLogger.Log($"RE: Searching for derived types for {FriendlyTypeName(t)}", StaticLogger.LoggingLevel.Call);
+
                 List<Type> typesToReturn = new List<Type>();
 
                 foreach (Type type in GetAllTypes())
@@ -266,7 +270,7 @@ namespace Penguin.Reflection
                     {
                         if (StaticLogger.Level != StaticLogger.LoggingLevel.None)
                         {
-                            StaticLogger.Log($"RE: {FriendlyTypeName(t)} :: {FriendlyTypeName(type)}", StaticLogger.LoggingLevel.Call);
+                            StaticLogger.Log($"RE: --{t.Name} :: {FriendlyTypeName(type)}", StaticLogger.LoggingLevel.Call);
                         }
 
                         typesToReturn.Add(type);
@@ -275,14 +279,14 @@ namespace Penguin.Reflection
                     {
                         if (StaticLogger.Level != StaticLogger.LoggingLevel.None)
                         {
-                            StaticLogger.Log($"RE: {FriendlyTypeName(t)} !: {FriendlyTypeName(type)}", StaticLogger.LoggingLevel.Call);
+                            StaticLogger.Log($"RE: --{t.Name} !: {FriendlyTypeName(type)}", StaticLogger.LoggingLevel.Call);
                         }
                     }
                 }
 
                 DerivedTypes.TryAdd(t, typesToReturn.ToList());
 
-                StaticLogger.Log("Finished type search", StaticLogger.LoggingLevel.Method);
+                StaticLogger.Log("RE: Finished type search", StaticLogger.LoggingLevel.Method);
 
                 foreach (Type toReturn in typesToReturn)
                 {
@@ -345,7 +349,7 @@ namespace Penguin.Reflection
         /// </summary>
         /// <param name="t">The type to get the properies of</param>
         /// <returns>All of the properties. All of them.</returns>
-        public static PropertyInfo[] GetProperties(Type t) => GetProperties(t);
+        public static PropertyInfo[] GetProperties(Type t) => Cache.GetProperties(t);
 
         /// <summary>
         /// Gets all the properties of the object
