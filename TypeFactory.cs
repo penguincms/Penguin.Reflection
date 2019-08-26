@@ -77,44 +77,56 @@ namespace Penguin.Reflection
 
             List<string> referencedPaths = new List<string>();
 
-            StaticLogger.Log($"RE: Dynamically loading assemblys from {AppDomain.CurrentDomain.BaseDirectory}", StaticLogger.LoggingLevel.Call);
-
-            referencedPaths.AddRange(Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll"));
-
-            referencedPaths.AddRange(Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.exe").Where(s => s != System.Reflection.Assembly.GetEntryAssembly()?.Location));
-
-            List<string> toLoad = referencedPaths.Where(r => !loadedPaths.Contains(r, StringComparer.InvariantCultureIgnoreCase)).ToList();
-
-            foreach (string loadPath in toLoad)
+            List<string> searchPaths = new List<string>()
             {
-                
-                if (failedCache.Contains(loadPath))
-                {
-                    StaticLogger.Log($"RE: Skipping due {FAILED_CACHE}: {loadPath}", StaticLogger.LoggingLevel.Call);
-                    continue;
-                }
-                //Check for blacklist
-                string matchingLine = blacklist.FirstOrDefault(b => Regex.IsMatch(Path.GetFileName(loadPath), b));
-                if (!string.IsNullOrWhiteSpace(matchingLine))
-                {
-                    StaticLogger.Log($"RE: Skipping assembly due to blacklist match ({matchingLine}) {loadPath}", StaticLogger.LoggingLevel.Call);
+                AppDomain.CurrentDomain.BaseDirectory
+            };
 
-                    continue;
-                }
-                
+            if(AppDomain.CurrentDomain.RelativeSearchPath != null)
+            {
+                searchPaths.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppDomain.CurrentDomain.RelativeSearchPath));
+            }
 
-                try
+            foreach (string searchPath in searchPaths) {
+                StaticLogger.Log($"RE: Dynamically loading assemblys from {searchPath}", StaticLogger.LoggingLevel.Call);
+
+                referencedPaths.AddRange(Directory.GetFiles(searchPath, "*.dll"));
+
+                referencedPaths.AddRange(Directory.GetFiles(searchPath, "*.exe").Where(s => s != System.Reflection.Assembly.GetEntryAssembly()?.Location));
+
+                List<string> toLoad = referencedPaths.Where(r => !loadedPaths.Contains(r, StringComparer.InvariantCultureIgnoreCase)).ToList();
+
+                foreach (string loadPath in toLoad)
                 {
-                    StaticLogger.Log($"RE: Dynamically loading assembly {loadPath}", StaticLogger.LoggingLevel.Call);
 
-                    loadedAssemblies.Add(AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(loadPath)));
-                }
-                catch (Exception ex)
-                {
-                    StaticLogger.Log(ex.Message, StaticLogger.LoggingLevel.Call);
-                    StaticLogger.Log(ex.StackTrace, StaticLogger.LoggingLevel.Call);
+                    if (failedCache.Contains(loadPath))
+                    {
+                        StaticLogger.Log($"RE: Skipping due {FAILED_CACHE}: {loadPath}", StaticLogger.LoggingLevel.Call);
+                        continue;
+                    }
+                    //Check for blacklist
+                    string matchingLine = blacklist.FirstOrDefault(b => Regex.IsMatch(Path.GetFileName(loadPath), b));
+                    if (!string.IsNullOrWhiteSpace(matchingLine))
+                    {
+                        StaticLogger.Log($"RE: Skipping assembly due to blacklist match ({matchingLine}) {loadPath}", StaticLogger.LoggingLevel.Call);
 
-                    failedCache.Add(loadPath);
+                        continue;
+                    }
+
+
+                    try
+                    {
+                        StaticLogger.Log($"RE: Dynamically loading assembly {loadPath}", StaticLogger.LoggingLevel.Call);
+
+                        loadedAssemblies.Add(AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(loadPath)));
+                    }
+                    catch (Exception ex)
+                    {
+                        StaticLogger.Log(ex.Message, StaticLogger.LoggingLevel.Call);
+                        StaticLogger.Log(ex.StackTrace, StaticLogger.LoggingLevel.Call);
+
+                        failedCache.Add(loadPath);
+                    }
                 }
             }
 
