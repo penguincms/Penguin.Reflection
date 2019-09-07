@@ -1,13 +1,12 @@
-﻿using System;
+﻿using Penguin.Debugging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.RegularExpressions;
-using Penguin.Debugging;
 
 namespace Penguin.Reflection
 {
@@ -16,57 +15,12 @@ namespace Penguin.Reflection
     /// </summary>
     public static class TypeFactory
     {
-        #region Properties
-
-        #endregion Properties
-
-        #region Constructors
-
-        internal static List<string> LoadFailedCache()
-        {
-            List<string> failedCache = new List<string>();
-
-            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE)))
-            {
-                failedCache = File.ReadAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE)).ToList();
-            }
-
-            return failedCache;
-        }
-
-        internal static List<string> LoadBlacklistCache()
-        {
-            try
-            {
-                string BlacklistFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, BLACKLIST_CACHE);
-
-                List<string> blacklist = new List<string>();
-
-                if (File.Exists(BlacklistFile))
-                {
-                    blacklist = File.ReadAllLines(BlacklistFile).ToList();
-                }
-                else
-                {
-                    File.WriteAllText(BlacklistFile, "# Enter a regex expression to blacklist a DLL from being loaded" + System.Environment.NewLine);
-                }
-
-                return blacklist.Where(s => !s.StartsWith("#")).ToList();
-            } catch(Exception)
-            {
-                return new List<string>();
-            }
-        }
-
-        
-
         /// <summary>
         /// Since everything is cached, we need to make sure ALL potential assemblies are loaded or we might end up missing classes because
         /// the assembly hasn't been loaded yet. Consider only loading whitelisted references if this is slow
         /// </summary>
         static TypeFactory()
         {
-
             StaticLogger.Log($"Penguin.Reflection: {Assembly.GetExecutingAssembly().GetName().Version}", StaticLogger.LoggingLevel.Call);
 
             List<string> failedCache = LoadFailedCache();
@@ -82,12 +36,13 @@ namespace Penguin.Reflection
                 AppDomain.CurrentDomain.BaseDirectory
             };
 
-            if(AppDomain.CurrentDomain.RelativeSearchPath != null)
+            if (AppDomain.CurrentDomain.RelativeSearchPath != null)
             {
                 searchPaths.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppDomain.CurrentDomain.RelativeSearchPath));
             }
 
-            foreach (string searchPath in searchPaths) {
+            foreach (string searchPath in searchPaths)
+            {
                 StaticLogger.Log($"RE: Dynamically loading assemblys from {searchPath}", StaticLogger.LoggingLevel.Call);
 
                 referencedPaths.AddRange(Directory.GetFiles(searchPath, "*.dll"));
@@ -98,7 +53,6 @@ namespace Penguin.Reflection
 
                 foreach (string loadPath in toLoad)
                 {
-
                     if (failedCache.Contains(loadPath))
                     {
                         StaticLogger.Log($"RE: Skipping due {FAILED_CACHE}: {loadPath}", StaticLogger.LoggingLevel.Call);
@@ -112,7 +66,6 @@ namespace Penguin.Reflection
 
                         continue;
                     }
-
 
                     try
                     {
@@ -135,9 +88,42 @@ namespace Penguin.Reflection
             File.WriteAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE), failedCache);
         }
 
-        #endregion Constructors
+        internal static List<string> LoadBlacklistCache()
+        {
+            try
+            {
+                string BlacklistFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, BLACKLIST_CACHE);
 
-        #region Methods
+                List<string> blacklist = new List<string>();
+
+                if (File.Exists(BlacklistFile))
+                {
+                    blacklist = File.ReadAllLines(BlacklistFile).ToList();
+                }
+                else
+                {
+                    File.WriteAllText(BlacklistFile, "# Enter a regex expression to blacklist a DLL from being loaded" + System.Environment.NewLine);
+                }
+
+                return blacklist.Where(s => !s.StartsWith("#")).ToList();
+            }
+            catch (Exception)
+            {
+                return new List<string>();
+            }
+        }
+
+        internal static List<string> LoadFailedCache()
+        {
+            List<string> failedCache = new List<string>();
+
+            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE)))
+            {
+                failedCache = File.ReadAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE)).ToList();
+            }
+
+            return failedCache;
+        }
 
         /// <summary>
         /// Gets all types in whitelisted assemblies that implement a given interface
@@ -223,9 +209,9 @@ namespace Penguin.Reflection
                     types = new List<Type>();
                 }
 
-                if(StaticLogger.Level != StaticLogger.LoggingLevel.None)
+                if (StaticLogger.Level != StaticLogger.LoggingLevel.None)
                 {
-                    foreach(Type t in types)
+                    foreach (Type t in types)
                     {
                         StaticLogger.Log($"RE: Found type {t.FullName}", StaticLogger.LoggingLevel.Call);
                     }
@@ -242,13 +228,6 @@ namespace Penguin.Reflection
             }
         }
 
-        private static string FriendlyTypeName(Type t)
-        {
-            AssemblyName an = t.Assembly.GetName();
-
-            return $"{t.FullName} [{an.Name} v{an.Version}]";
-        }
-
         /// <summary>
         /// Gets a list of all types derived from the current type
         /// </summary>
@@ -260,7 +239,6 @@ namespace Penguin.Reflection
             {
                 throw new ArgumentException($"Type to check for can not be interface as this method uses 'IsSubclassOf'. To search for interfaces use {nameof(GetAllImplementations)}");
             }
-
 
             if (DerivedTypes.ContainsKey(t))
             {
@@ -305,7 +283,6 @@ namespace Penguin.Reflection
                     yield return toReturn;
                 }
             }
-           
         }
 
         /// <summary>
@@ -483,14 +460,15 @@ namespace Penguin.Reflection
         /// <returns>all custom attributes</returns>
         public static List<T> RetrieveAttributes<T>(MemberInfo toCheck) where T : Attribute => toCheck.GetCustomAttributes<T>().ToList();
 
-        #endregion Methods
+        private static string FriendlyTypeName(Type t)
+        {
+            AssemblyName an = t.Assembly.GetName();
 
-        #region Fields
+            return $"{t.FullName} [{an.Name} v{an.Version}]";
+        }
 
-        internal const string FAILED_CACHE = "TypeFactory.Failed.Cache";
         internal const string BLACKLIST_CACHE = "TypeFactory.BlackList.Cache";
-
-        #endregion Fields
+        internal const string FAILED_CACHE = "TypeFactory.Failed.Cache";
 
         private static ConcurrentDictionary<string, ICollection<Type>> AssemblyTypes { get; set; } = new ConcurrentDictionary<string, ICollection<Type>>();
 

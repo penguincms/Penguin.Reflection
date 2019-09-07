@@ -10,8 +10,6 @@ namespace Penguin.Reflection
     public class ReflectiveEnumerator
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
-        #region Methods
-
         /// <summary>
         /// Gets all subtypes (inc specified) in current executing assembly
         /// </summary>
@@ -47,7 +45,5 @@ namespace Penguin.Reflection
         /// <typeparam name="T">The interface to check for</typeparam>
         /// <returns>All the types</returns>
         public static IEnumerable<Type> GetTypesThatImplementInterface<T>() => Assembly.GetExecutingAssembly().GetTypes().Where(t => typeof(T).IsAssignableFrom(t) && !t.IsAbstract);
-
-        #endregion Methods
     }
 }

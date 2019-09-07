@@ -12,8 +12,6 @@ namespace Penguin.Reflection
     /// </summary>
     public static class Cache
     {
-        #region Methods
-
         /// <summary>
         /// Gets the first attribute matching the specified type
         /// </summary>
@@ -104,13 +102,7 @@ namespace Penguin.Reflection
             return GetCustomAttributes(p).Any(a => a.Instance.GetType() == t);
         }
 
-        #endregion Methods
-
-        #region Properties
-
         internal static ConcurrentDictionary<MemberInfo, AttributeInstance[]> Attributes { get; set; } = new ConcurrentDictionary<MemberInfo, AttributeInstance[]>();
         internal static ConcurrentDictionary<Type, PropertyInfo[]> Properties { get; set; } = new ConcurrentDictionary<Type, PropertyInfo[]>();
-
-        #endregion Properties
     }
 }
