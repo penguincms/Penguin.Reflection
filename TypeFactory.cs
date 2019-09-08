@@ -29,10 +29,20 @@ namespace Penguin.Reflection
 
             List<string> failedCache = LoadFailedCache();
             List<string> blacklist = LoadBlacklistCache();
+            Dictionary<string, Assembly> loadedPaths = new Dictionary<string, Assembly>();
 
-            List<Assembly> loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
+            //Map out the loaded assemblies so we can find them by path
+            foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if(a.IsDynamic)
+                {
+                    if(!loadedPaths.ContainsKey(a.Location))
+                    {
+                        loadedPaths.Add(a.Location, a);
+                    }
+                }
+            }
 
-            Dictionary<string, Assembly> loadedPaths = loadedAssemblies.Where(a => !a.IsDynamic).ToDictionary(k => k.Location, v => v);
 
             List<string> referencedPaths = new List<string>();
 
@@ -46,6 +56,11 @@ namespace Penguin.Reflection
                 searchPaths.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AppDomain.CurrentDomain.RelativeSearchPath));
             }
 
+            //We're going to add the paths to the loaded assemblies here so we can double 
+            //back and ensure we're building the dependencies for the loaded assemblies that 
+            //do NOT reside in the EXE/Bin directories
+            HashSet<string> SearchedPaths = new HashSet<string>();
+
             foreach (string searchPath in searchPaths)
             {
                 StaticLogger.Log($"RE: Dynamically loading assemblys from {searchPath}", StaticLogger.LoggingLevel.Call);
@@ -56,8 +71,10 @@ namespace Penguin.Reflection
 
                 foreach (string loadPath in referencedPaths)
                 {
+                    SearchedPaths.Add(loadPath);
+
                     //If we're not already loaded
-                    if(!loadedPaths.TryGetValue(loadPath, out Assembly a)) {
+                    if (!loadedPaths.TryGetValue(loadPath, out Assembly a)) {
                         if (failedCache.Contains(loadPath))
                         {
                             StaticLogger.Log($"RE: Skipping due {FAILED_CACHE}: {loadPath}", StaticLogger.LoggingLevel.Call);
@@ -79,7 +96,6 @@ namespace Penguin.Reflection
                             AssemblyName an = AssemblyName.GetAssemblyName(loadPath);
                             a = LoadAssembly(loadPath, an);
                             AssembliesByFullName.TryAdd(an.FullName, a);
-                            loadedAssemblies.Add(a);
                         }
                         catch (Exception ex)
                         {
@@ -94,6 +110,16 @@ namespace Penguin.Reflection
                     {
                         AddReferenceInformation(a);
                     }
+                }
+            }
+
+            //And now we double check to make sure we're not missing anything in the loaded 
+            //assemblies that were not found in our path discovery
+            foreach(KeyValuePair<string, Assembly> kvp in loadedPaths)
+            {
+                if(!SearchedPaths.Contains(kvp.Key))
+                {
+                    AddReferenceInformation(kvp.Value);
                 }
             }
 
