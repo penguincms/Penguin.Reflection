@@ -1,4 +1,5 @@
 ﻿using Penguin.Debugging;
+using Penguin.Reflection.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 
 namespace Penguin.Reflection
@@ -15,6 +17,8 @@ namespace Penguin.Reflection
     /// </summary>
     public static class TypeFactory
     {
+        static ConcurrentDictionary<string, Assembly> AssembliesByFullName { get; set; } = new ConcurrentDictionary<string, Assembly>();
+        static ConcurrentDictionary<string, List<Assembly>> AssembliesThatReference { get; set; } = new ConcurrentDictionary<string, List<Assembly>>();
         /// <summary>
         /// Since everything is cached, we need to make sure ALL potential assemblies are loaded or we might end up missing classes because
         /// the assembly hasn't been loaded yet. Consider only loading whitelisted references if this is slow
@@ -71,7 +75,24 @@ namespace Penguin.Reflection
                     {
                         StaticLogger.Log($"RE: Dynamically loading assembly {loadPath}", StaticLogger.LoggingLevel.Call);
 
-                        loadedAssemblies.Add(AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(loadPath)));
+                        AssemblyName an = AssemblyName.GetAssemblyName(loadPath);
+                        Assembly a = LoadAssembly(loadPath, an);
+                        AssembliesByFullName.TryAdd(an.FullName, a);
+                        loadedAssemblies.Add(a);
+
+
+                        foreach (AssemblyName ani in a.GetReferencedAssemblies())
+                        {
+                            string AniName = ani.FullName;
+                            if (AssembliesThatReference.TryGetValue(AniName, out List<Assembly> matches))
+                            {
+                                matches.Add(a);
+                            }
+                            else
+                            {
+                                AssembliesThatReference.TryAdd(AniName, new List<Assembly> { a });
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -86,6 +107,142 @@ namespace Penguin.Reflection
             StaticLogger.Log($"RE: {nameof(TypeFactory)} static initialization completed", StaticLogger.LoggingLevel.Final);
 
             File.WriteAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE), failedCache);
+        }
+
+        private static Assembly LoadNetCoreAssembly(string path)
+        {
+            return System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
+        }
+        private static Assembly LoadNetFrameworkAssembly(AssemblyName an)
+        {
+            return AppDomain.CurrentDomain.Load(an);
+        }
+
+        private static Assembly LoadAssembly(string path, AssemblyName an)
+        {
+
+            string framework = Assembly
+                .GetEntryAssembly()?
+                .GetCustomAttribute<TargetFrameworkAttribute>()?
+                .FrameworkName;
+
+            if (framework.StartsWith(".NETFramework"))
+            {
+                return LoadNetFrameworkAssembly(an);
+            }
+            else
+            {
+                return LoadNetCoreAssembly(path);
+            }
+        }
+        /// <summary>
+        /// Gets an assembly by its AssemblyName
+        /// </summary>
+        /// <param name="Name">The AssemblyName</param>
+        /// <returns>The matching Assembly</returns>
+        public static Assembly GetAssemblyByName(AssemblyName Name) => GetAssemblyByName(Name.FullName);
+
+        /// <summary>
+        /// Gets an assembly by its AssemblyName.FullName
+        /// </summary>
+        /// <param name="FullName">The AssemblyName.FullName</param>
+        /// <returns>The matching Assembly</returns>
+        public static Assembly GetAssemblyByName(string FullName)
+        {
+            if (!AssembliesByFullName.TryGetValue(FullName, out Assembly a))
+            {
+                a = AppDomain.CurrentDomain.GetAssemblies().First(aa => aa.GetName().FullName == FullName);
+                AssembliesByFullName.TryAdd(FullName, a);
+            }
+
+            return a;
+        }
+
+        /// <summary>
+        /// Gets all assemblies that are referenced recursively by the assembly containing the given type
+        /// </summary>
+        /// <param name="t">A type in the root assembly to search for </param>
+        /// <returns>all assemblies that are referenced recursively by the assembly containing the given type</returns>
+        public static IEnumerable<Assembly> GetReferencedAssemblies(Type t)
+        {
+            Assembly root = t.Assembly;
+
+            foreach (Assembly a in GetDependentAssemblies(root))
+            {
+                yield return a;
+            }
+        }
+
+        /// <summary>
+        /// Gets all assemblies that are referenced recursively by the assembly one
+        /// </summary>
+        /// <param name="a">The root assembly to search for </param>
+        /// <returns>all assemblies that are referenced recursively by the assembly one</returns>
+        public static IEnumerable<Assembly> GetReferencedAssemblies(Assembly a) => GetReferencedAssemblies(a, new HashSet<AssemblyName>());
+
+        private static IEnumerable<Assembly> GetReferencedAssemblies(Assembly a, HashSet<AssemblyName> checkedNames)
+        {
+            yield return a;
+
+            foreach (AssemblyName an in a.GetReferencedAssemblies())
+            {
+                if (checkedNames.Contains(an))
+                {
+                    continue;
+                }
+
+                checkedNames.Add(an);
+
+                foreach (Assembly ai in GetReferencedAssemblies(GetAssemblyByName(an), checkedNames))
+                {
+                    yield return ai;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets all assemblies that recursively reference the one containing the given type
+        /// </summary>
+        /// <param name="t">A type in the root assembly to search for </param>
+        /// <returns>all assemblies that recursively reference the one containing the given type</returns>
+        public static IEnumerable<Assembly> GetDependentAssemblies(Type t)
+        {
+            Assembly root = t.Assembly;
+
+            foreach (Assembly a in GetDependentAssemblies(root))
+            {
+                yield return a;
+            }
+        }
+
+        /// <summary>
+        /// Gets all assemblies that recursively reference the given one
+        /// </summary>
+        /// <param name="a">The root assembly to search for </param>
+        /// <returns>all assemblies that recursively reference the one containing the given type</returns>
+        public static IEnumerable<Assembly> GetDependentAssemblies(Assembly a) => GetDependentAssemblies(a, new HashSet<Assembly>());
+
+        private static IEnumerable<Assembly> GetDependentAssemblies(Assembly a, HashSet<Assembly> checkedAssemblies)
+        {
+            yield return a;
+
+            if (AssembliesThatReference.TryGetValue(a.GetName().FullName, out List<Assembly> referencedBy))
+            {
+                foreach (Assembly ai in referencedBy)
+                {
+                    if (checkedAssemblies.Contains(ai))
+                    {
+                        continue;
+                    }
+
+                    checkedAssemblies.Add(ai);
+
+                    foreach (Assembly aii in GetDependentAssemblies(ai, checkedAssemblies))
+                    {
+                        yield return aii;
+                    }
+                }
+            }
         }
 
         internal static List<string> LoadBlacklistCache()
@@ -130,14 +287,17 @@ namespace Penguin.Reflection
         /// </summary>
         /// <typeparam name="T">The interface to check for</typeparam>
         /// <returns>All of the aforementioned types</returns>
-        public static IEnumerable<Type> GetAllImplementations<T>() => GetAllTypes().Where(p => typeof(T).IsAssignableFrom(p) && !p.IsAbstract).Distinct();
+        public static IEnumerable<Type> GetAllImplementations<T>() => GetAllImplementations(typeof(T));
 
         /// <summary>
         /// Gets all types in whitelisted assemblies that implement a given interface
         /// </summary>
         /// <param name="InterfaceType">The interface to check for</param>
         /// <returns>All of the aforementioned types</returns>
-        public static IEnumerable<Type> GetAllImplementations(Type InterfaceType) => GetAllTypes().Where(p => InterfaceType.IsAssignableFrom(p) && !p.IsAbstract).Distinct();
+        public static IEnumerable<Type> GetAllImplementations(Type InterfaceType)
+        {
+            return GetDependentAssemblies(InterfaceType).GetAllTypes().Where(p => InterfaceType.IsAssignableFrom(p) && !p.IsAbstract).Distinct();
+        }
 
         /// <summary>
         /// Gets all types from all whitelisted assemblies
@@ -174,8 +334,7 @@ namespace Penguin.Reflection
                 catch (ReflectionTypeLoadException ex)
                 {
                     StaticLogger.Log(ex.Message, StaticLogger.LoggingLevel.Call);
-                    Console.WriteLine(ex.Message);
-                    Console.WriteLine(ex.StackTrace);
+                    StaticLogger.Log(ex.StackTrace, StaticLogger.LoggingLevel.Call);
 
                     try
                     {
@@ -204,8 +363,7 @@ namespace Penguin.Reflection
                 catch (Exception ex)
                 {
                     StaticLogger.Log(ex.Message, StaticLogger.LoggingLevel.Call);
-                    Console.WriteLine(ex.Message);
-                    Console.WriteLine(ex.StackTrace);
+                    StaticLogger.Log(ex.StackTrace, StaticLogger.LoggingLevel.Call);
                     types = new List<Type>();
                 }
 
@@ -254,7 +412,7 @@ namespace Penguin.Reflection
 
                 List<Type> typesToReturn = new List<Type>();
 
-                foreach (Type type in GetAllTypes())
+                foreach (Type type in GetDependentAssemblies(t).GetAllTypes())
                 {
                     if (type.IsSubclassOf(t) && type.Module.ScopeName != "EntityProxyModule")
                     {

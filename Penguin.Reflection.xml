@@ -47,6 +47,13 @@
             <param name="t">The type to check for</param>
             <returns>Does the member declare this attribute?</returns>
         </member>
+        <member name="M:Penguin.Reflection.Extensions.AssemblyExtensions.GetAllTypes(System.Collections.Generic.IEnumerable{System.Reflection.Assembly})">
+            <summary>
+            Gets all types from all assemblies in the list
+            </summary>
+            <param name="assemblies">The source assemblies to search</param>
+            <returns>The types found in the assemblies</returns>
+        </member>
         <member name="M:Penguin.Reflection.ReflectiveEnumerator.GetEnumerableOfType``1">
             <summary>
             Gets all subtypes (inc specified) in current executing assembly
@@ -79,6 +86,48 @@
             Since everything is cached, we need to make sure ALL potential assemblies are loaded or we might end up missing classes because
             the assembly hasn't been loaded yet. Consider only loading whitelisted references if this is slow
             </summary>
+        </member>
+        <member name="M:Penguin.Reflection.TypeFactory.GetAssemblyByName(System.Reflection.AssemblyName)">
+            <summary>
+            Gets an assembly by its AssemblyName
+            </summary>
+            <param name="Name">The AssemblyName</param>
+            <returns>The matching Assembly</returns>
+        </member>
+        <member name="M:Penguin.Reflection.TypeFactory.GetAssemblyByName(System.String)">
+            <summary>
+            Gets an assembly by its AssemblyName.FullName
+            </summary>
+            <param name="FullName">The AssemblyName.FullName</param>
+            <returns>The matching Assembly</returns>
+        </member>
+        <member name="M:Penguin.Reflection.TypeFactory.GetReferencedAssemblies(System.Type)">
+            <summary>
+            Gets all assemblies that are referenced recursively by the assembly containing the given type
+            </summary>
+            <param name="t">A type in the root assembly to search for </param>
+            <returns>all assemblies that are referenced recursively by the assembly containing the given type</returns>
+        </member>
+        <member name="M:Penguin.Reflection.TypeFactory.GetReferencedAssemblies(System.Reflection.Assembly)">
+            <summary>
+            Gets all assemblies that are referenced recursively by the assembly one
+            </summary>
+            <param name="a">The root assembly to search for </param>
+            <returns>all assemblies that are referenced recursively by the assembly one</returns>
+        </member>
+        <member name="M:Penguin.Reflection.TypeFactory.GetDependentAssemblies(System.Type)">
+            <summary>
+            Gets all assemblies that recursively reference the one containing the given type
+            </summary>
+            <param name="t">A type in the root assembly to search for </param>
+            <returns>all assemblies that recursively reference the one containing the given type</returns>
+        </member>
+        <member name="M:Penguin.Reflection.TypeFactory.GetDependentAssemblies(System.Reflection.Assembly)">
+            <summary>
+            Gets all assemblies that recursively reference the given one
+            </summary>
+            <param name="a">The root assembly to search for </param>
+            <returns>all assemblies that recursively reference the one containing the given type</returns>
         </member>
         <member name="M:Penguin.Reflection.TypeFactory.GetAllImplementations``1">
             <summary>
