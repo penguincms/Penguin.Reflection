@@ -101,9 +101,9 @@
         </member>
         <member name="M:Penguin.Reflection.TypeFactory.GetAssemblyByName(System.String)">
             <summary>
-            Gets an assembly by its AssemblyName.FullName
+            Gets an assembly by its AssemblyName.Name
             </summary>
-            <param name="FullName">The AssemblyName.FullName</param>
+            <param name="Name">The AssemblyName.Name</param>
             <returns>The matching Assembly</returns>
         </member>
         <member name="M:Penguin.Reflection.TypeFactory.GetReferencedAssemblies(System.Type)">

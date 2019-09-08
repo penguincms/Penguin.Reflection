@@ -17,7 +17,7 @@ namespace Penguin.Reflection
     /// </summary>
     public static class TypeFactory
     {
-        static ConcurrentDictionary<string, Assembly> AssembliesByFullName { get; set; } = new ConcurrentDictionary<string, Assembly>();
+        static ConcurrentDictionary<string, Assembly> AssembliesByName { get; set; } = new ConcurrentDictionary<string, Assembly>();
         static ConcurrentDictionary<string, List<Assembly>> AssembliesThatReference { get; set; } = new ConcurrentDictionary<string, List<Assembly>>();
         /// <summary>
         /// Since everything is cached, we need to make sure ALL potential assemblies are loaded or we might end up missing classes because
@@ -95,7 +95,7 @@ namespace Penguin.Reflection
                         {
                             AssemblyName an = AssemblyName.GetAssemblyName(loadPath);
                             a = LoadAssembly(loadPath, an);
-                            AssembliesByFullName.TryAdd(an.FullName, a);
+                            AssembliesByName.TryAdd(an.Name, a);
                         }
                         catch (Exception ex)
                         {
@@ -132,7 +132,7 @@ namespace Penguin.Reflection
         {
             foreach (AssemblyName ani in a.GetReferencedAssemblies())
             {
-                string AniName = ani.FullName;
+                string AniName = ani.Name;
                 if (AssembliesThatReference.TryGetValue(AniName, out List<Assembly> matches))
                 {
                     matches.Add(a);
@@ -194,19 +194,19 @@ namespace Penguin.Reflection
         /// </summary>
         /// <param name="Name">The AssemblyName</param>
         /// <returns>The matching Assembly</returns>
-        public static Assembly GetAssemblyByName(AssemblyName Name) => GetAssemblyByName(Name.FullName);
+        public static Assembly GetAssemblyByName(AssemblyName Name) => GetAssemblyByName(Name.Name);
 
         /// <summary>
-        /// Gets an assembly by its AssemblyName.FullName
+        /// Gets an assembly by its AssemblyName.Name
         /// </summary>
-        /// <param name="FullName">The AssemblyName.FullName</param>
+        /// <param name="Name">The AssemblyName.Name</param>
         /// <returns>The matching Assembly</returns>
-        public static Assembly GetAssemblyByName(string FullName)
+        public static Assembly GetAssemblyByName(string Name)
         {
-            if (!AssembliesByFullName.TryGetValue(FullName, out Assembly a))
+            if (!AssembliesByName.TryGetValue(Name, out Assembly a))
             {
-                a = AppDomain.CurrentDomain.GetAssemblies().First(aa => aa.GetName().FullName == FullName);
-                AssembliesByFullName.TryAdd(FullName, a);
+                a = AppDomain.CurrentDomain.GetAssemblies().First(aa => aa.GetName().Name == Name);
+                AssembliesByName.TryAdd(Name, a);
             }
 
             return a;
@@ -276,11 +276,11 @@ namespace Penguin.Reflection
         /// <returns>all assemblies that recursively reference the one containing the given type</returns>
         public static IEnumerable<Assembly> GetDependentAssemblies(Assembly a) => GetDependentAssemblies(a, new HashSet<Assembly>());
 
-        private static IEnumerable<Assembly> GetDependentAssemblies(Assembly a, HashSet<Assembly> checkedAssemblies)
+        private static IEnumerable<Assembly> GetDependentAssemblies(Assembly a, HashSet<Assembly> checkedAssemblies, string Prefix = "")
         {
             yield return a;
 
-            if (AssembliesThatReference.TryGetValue(a.GetName().FullName, out List<Assembly> referencedBy))
+            if (AssembliesThatReference.TryGetValue(a.GetName().Name, out List<Assembly> referencedBy))
             {
                 foreach (Assembly ai in referencedBy)
                 {
@@ -291,8 +291,13 @@ namespace Penguin.Reflection
 
                     checkedAssemblies.Add(ai);
 
-                    foreach (Assembly aii in GetDependentAssemblies(ai, checkedAssemblies))
+                    foreach (Assembly aii in GetDependentAssemblies(ai, checkedAssemblies, "----" + Prefix))
                     {
+                        if(StaticLogger.IsListening)
+                        {
+                            StaticLogger.Log($"{Prefix} Dependency {aii.GetName().Name}", StaticLogger.LoggingLevel.Call);
+                        }
+
                         yield return aii;
                     }
                 }
