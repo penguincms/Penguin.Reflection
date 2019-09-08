@@ -31,7 +31,8 @@ namespace Penguin.Reflection
             List<string> blacklist = LoadBlacklistCache();
 
             List<Assembly> loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
-            string[] loadedPaths = loadedAssemblies.Where(a => !a.IsDynamic).Select(a => a.Location).ToArray();
+
+            Dictionary<string, Assembly> loadedPaths = loadedAssemblies.Where(a => !a.IsDynamic).ToDictionary(k => k.Location, v => v);
 
             List<string> referencedPaths = new List<string>();
 
@@ -51,55 +52,47 @@ namespace Penguin.Reflection
 
                 referencedPaths.AddRange(Directory.GetFiles(searchPath, "*.dll"));
 
-                referencedPaths.AddRange(Directory.GetFiles(searchPath, "*.exe").Where(s => s != System.Reflection.Assembly.GetEntryAssembly()?.Location));
+                referencedPaths.AddRange(Directory.GetFiles(searchPath, "*.exe"));
 
-                List<string> toLoad = referencedPaths.Where(r => !loadedPaths.Contains(r, StringComparer.InvariantCultureIgnoreCase)).ToList();
-
-                foreach (string loadPath in toLoad)
+                foreach (string loadPath in referencedPaths)
                 {
-                    if (failedCache.Contains(loadPath))
-                    {
-                        StaticLogger.Log($"RE: Skipping due {FAILED_CACHE}: {loadPath}", StaticLogger.LoggingLevel.Call);
-                        continue;
-                    }
-                    //Check for blacklist
-                    string matchingLine = blacklist.FirstOrDefault(b => Regex.IsMatch(Path.GetFileName(loadPath), b));
-                    if (!string.IsNullOrWhiteSpace(matchingLine))
-                    {
-                        StaticLogger.Log($"RE: Skipping assembly due to blacklist match ({matchingLine}) {loadPath}", StaticLogger.LoggingLevel.Call);
+                    //If we're not already loaded
+                    if(!loadedPaths.TryGetValue(loadPath, out Assembly a)) {
+                        if (failedCache.Contains(loadPath))
+                        {
+                            StaticLogger.Log($"RE: Skipping due {FAILED_CACHE}: {loadPath}", StaticLogger.LoggingLevel.Call);
+                            continue;
+                        }
+                        //Check for blacklist
+                        string matchingLine = blacklist.FirstOrDefault(b => Regex.IsMatch(Path.GetFileName(loadPath), b));
+                        if (!string.IsNullOrWhiteSpace(matchingLine))
+                        {
+                            StaticLogger.Log($"RE: Skipping assembly due to blacklist match ({matchingLine}) {loadPath}", StaticLogger.LoggingLevel.Call);
 
-                        continue;
-                    }
+                            continue;
+                        }
 
-                    try
-                    {
                         StaticLogger.Log($"RE: Dynamically loading assembly {loadPath}", StaticLogger.LoggingLevel.Call);
 
-                        AssemblyName an = AssemblyName.GetAssemblyName(loadPath);
-                        Assembly a = LoadAssembly(loadPath, an);
-                        AssembliesByFullName.TryAdd(an.FullName, a);
-                        loadedAssemblies.Add(a);
-
-
-                        foreach (AssemblyName ani in a.GetReferencedAssemblies())
+                        try
                         {
-                            string AniName = ani.FullName;
-                            if (AssembliesThatReference.TryGetValue(AniName, out List<Assembly> matches))
-                            {
-                                matches.Add(a);
-                            }
-                            else
-                            {
-                                AssembliesThatReference.TryAdd(AniName, new List<Assembly> { a });
-                            }
+                            AssemblyName an = AssemblyName.GetAssemblyName(loadPath);
+                            a = LoadAssembly(loadPath, an);
+                            AssembliesByFullName.TryAdd(an.FullName, a);
+                            loadedAssemblies.Add(a);
+                        }
+                        catch (Exception ex)
+                        {
+                            StaticLogger.Log(ex.Message, StaticLogger.LoggingLevel.Call);
+                            StaticLogger.Log(ex.StackTrace, StaticLogger.LoggingLevel.Call);
+
+                            failedCache.Add(loadPath);
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        StaticLogger.Log(ex.Message, StaticLogger.LoggingLevel.Call);
-                        StaticLogger.Log(ex.StackTrace, StaticLogger.LoggingLevel.Call);
 
-                        failedCache.Add(loadPath);
+                    if (!(a is null))
+                    {
+                        AddReferenceInformation(a);
                     }
                 }
             }
@@ -107,6 +100,22 @@ namespace Penguin.Reflection
             StaticLogger.Log($"RE: {nameof(TypeFactory)} static initialization completed", StaticLogger.LoggingLevel.Final);
 
             File.WriteAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE), failedCache);
+        }
+
+        private static void AddReferenceInformation(Assembly a)
+        {
+            foreach (AssemblyName ani in a.GetReferencedAssemblies())
+            {
+                string AniName = ani.FullName;
+                if (AssembliesThatReference.TryGetValue(AniName, out List<Assembly> matches))
+                {
+                    matches.Add(a);
+                }
+                else
+                {
+                    AssembliesThatReference.TryAdd(AniName, new List<Assembly> { a });
+                }
+            }
         }
 
         private static Assembly LoadNetCoreAssembly(string path)
@@ -118,6 +127,25 @@ namespace Penguin.Reflection
             return AppDomain.CurrentDomain.Load(an);
         }
 
+        private static bool? isNetFramework { get; set; }
+
+        /// <summary>
+        /// Returns true if the executing application is .NetFramework opposed to Core or Standard (or other)
+        /// </summary>
+        public static bool IsNetFramework { get
+            {
+                if(!isNetFramework.HasValue)
+                {
+                    isNetFramework = Assembly
+                                    .GetEntryAssembly()?
+                                    .GetCustomAttribute<TargetFrameworkAttribute>()?
+                                    .FrameworkName
+                                    .StartsWith(".NETFramework");
+                }
+
+                return isNetFramework.Value;
+            }
+        }
         private static Assembly LoadAssembly(string path, AssemblyName an)
         {
 
@@ -126,7 +154,7 @@ namespace Penguin.Reflection
                 .GetCustomAttribute<TargetFrameworkAttribute>()?
                 .FrameworkName;
 
-            if (framework.StartsWith(".NETFramework"))
+            if (IsNetFramework)
             {
                 return LoadNetFrameworkAssembly(an);
             }

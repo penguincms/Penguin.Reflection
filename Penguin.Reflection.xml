@@ -87,6 +87,11 @@
             the assembly hasn't been loaded yet. Consider only loading whitelisted references if this is slow
             </summary>
         </member>
+        <member name="P:Penguin.Reflection.TypeFactory.IsNetFramework">
+            <summary>
+            Returns true if the executing application is .NetFramework opposed to Core or Standard (or other)
+            </summary>
+        </member>
         <member name="M:Penguin.Reflection.TypeFactory.GetAssemblyByName(System.Reflection.AssemblyName)">
             <summary>
             Gets an assembly by its AssemblyName
