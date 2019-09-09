@@ -34,7 +34,7 @@ namespace Penguin.Reflection
             //Map out the loaded assemblies so we can find them by path
             foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies())
             {
-                if(a.IsDynamic)
+                if(!a.IsDynamic)
                 {
                     if(!loadedPaths.ContainsKey(a.Location))
                     {
