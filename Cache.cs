@@ -46,7 +46,7 @@ namespace Penguin.Reflection
                 {
                     attributes.AddRange(toCheck.GetCustomAttributes(true).Select(a => new AttributeInstance(toCheck, a as Attribute, inherited)));
                     inherited = true;
-                } while ((toCheck = p.DeclaringType.BaseType?.GetProperty(toCheck.Name)) != null);
+                } while ((toCheck = toCheck.DeclaringType.BaseType?.GetProperty(toCheck.Name)) != null);
             }
             else if (p is Type)
             {
