@@ -30,39 +30,51 @@ namespace Penguin.Reflection
         /// <returns>All attribute instances from the current member</returns>
         public static AttributeInstance[] GetCustomAttributes(MemberInfo p)
         {
-            if (!Attributes.ContainsKey(p))
+            if (Attributes.TryGetValue(p, out AttributeInstance[] cachedAttributes))
             {
-                List<AttributeInstance> attributes = new List<AttributeInstance>();
-
-                if (p is PropertyInfo)
-                {
-                    Attributes.TryAdd(p, p.GetCustomAttributes(true).Select(a => new AttributeInstance(p, a as Attribute, false)).ToArray());
-                }
-                else if (p is Type)
-                {
-                    Type toCheck = p as Type;
-
-                    do
-                    {
-                        //This can be recursive to leverage the cache, if it needs to be,
-                        //however the logic for "isinherited" would need to be changed to reflect that
-                        foreach (object instance in p.GetCustomAttributes(false))
-                        {
-                            attributes.Add(new AttributeInstance(toCheck, instance as Attribute, p != toCheck));
-                        }
-
-                        toCheck = toCheck.BaseType;
-                    } while (toCheck != null);
-
-                    Attributes.TryAdd(p, attributes.ToArray());
-                }
-                else
-                {
-                    throw new Exception($"Unsupported MemberInfo type {p.GetType()}");
-                }
+                return cachedAttributes;
             }
 
-            return Attributes[p];
+            List<AttributeInstance> attributes = new List<AttributeInstance>();
+
+            if (p is PropertyInfo)
+            {
+                PropertyInfo toCheck = p as PropertyInfo;
+                bool inherited = false;
+
+                do
+                {
+                    attributes.AddRange(toCheck.GetCustomAttributes(true).Select(a => new AttributeInstance(toCheck, a as Attribute, inherited)));
+                    inherited = true;
+                } while ((toCheck = p.DeclaringType.BaseType?.GetProperty(toCheck.Name)) != null);
+            }
+            else if (p is Type)
+            {
+                Type toCheck = p as Type;
+
+                do
+                {
+                    //This can be recursive to leverage the cache, if it needs to be,
+                    //however the logic for "isinherited" would need to be changed to reflect that
+                    foreach (object instance in p.GetCustomAttributes(false))
+                    {
+                        attributes.Add(new AttributeInstance(toCheck, instance as Attribute, p != toCheck));
+                    }
+
+                    toCheck = toCheck.BaseType;
+                } while (toCheck != null);
+
+            }
+            else
+            {
+                throw new Exception($"Unsupported MemberInfo type {p.GetType()}");
+            }
+
+            AttributeInstance[] toReturn = attributes.ToArray();
+
+            Attributes.TryAdd(p, toReturn);
+
+            return toReturn;
         }
 
         /// <summary>
