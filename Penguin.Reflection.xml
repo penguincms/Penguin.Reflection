@@ -248,5 +248,15 @@
             <param name="toCheck">The member to retrieve the information for</param>
             <returns>all custom attributes</returns>
         </member>
+        <member name="T:Penguin.Reflection.TypeFactoryGlobalSettings">
+            <summary>
+            Global settings for before the TypeFactory static constructor is called
+            </summary>
+        </member>
+        <member name="P:Penguin.Reflection.TypeFactoryGlobalSettings.DisableFailedLoadSkip">
+            <summary>
+            If true, doesn't attempt to skip assemblies for which the previous load has failed (Default false)
+            </summary>
+        </member>
     </members>
 </doc>

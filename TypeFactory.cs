@@ -28,7 +28,15 @@ namespace Penguin.Reflection
             StaticLogger.Log($"Penguin.Reflection: {Assembly.GetExecutingAssembly().GetName().Version}", StaticLogger.LoggingLevel.Call);
 
             List<string> failedCache = LoadFailedCache();
-            List<string> blacklist = LoadBlacklistCache();
+            List<string> blacklist;
+
+            if (!TypeFactoryGlobalSettings.DisableFailedLoadSkip) {
+                blacklist = LoadBlacklistCache();
+            } else
+            {
+                blacklist = new List<string>();
+            }
+
             Dictionary<string, Assembly> loadedPaths = new Dictionary<string, Assembly>();
 
             //Map out the loaded assemblies so we can find them by path
@@ -80,6 +88,7 @@ namespace Penguin.Reflection
                             StaticLogger.Log($"RE: Skipping due {FAILED_CACHE}: {loadPath}", StaticLogger.LoggingLevel.Call);
                             continue;
                         }
+
                         //Check for blacklist
                         string matchingLine = blacklist.FirstOrDefault(b => Regex.IsMatch(Path.GetFileName(loadPath), b));
                         if (!string.IsNullOrWhiteSpace(matchingLine))
@@ -125,7 +134,10 @@ namespace Penguin.Reflection
 
             StaticLogger.Log($"RE: {nameof(TypeFactory)} static initialization completed", StaticLogger.LoggingLevel.Final);
 
-            File.WriteAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE), failedCache);
+            if (!TypeFactoryGlobalSettings.DisableFailedLoadSkip)
+            {
+                File.WriteAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE), failedCache);
+            }
         }
 
         private static void AddReferenceInformation(Assembly a)
