@@ -3,6 +3,7 @@ using Penguin.Reflection.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -174,11 +175,45 @@ namespace Penguin.Reflection
             {
                 if(!isNetFramework.HasValue)
                 {
-                    isNetFramework = Assembly
-                                    .GetEntryAssembly()?
-                                    .GetCustomAttribute<TargetFrameworkAttribute>()?
-                                    .FrameworkName
-                                    .StartsWith(".NETFramework");
+                    Assembly entry = Assembly.GetEntryAssembly();
+
+                    if (entry != null) {
+                        isNetFramework = entry.GetCustomAttribute<TargetFrameworkAttribute>()?
+                                                .FrameworkName
+                                                .StartsWith(".NETFramework");
+                    } else
+                    {
+                        isNetFramework = false;
+
+                        try
+                        {
+                            //Literally crawl the whole fucking stack looking for the attribute if theres no entry assembly. If a single one is NetFramework
+                            //Then we (rightly?) assume the whole thing is.
+                            foreach(StackFrame f in new StackTrace().GetFrames())
+                            {
+                                try
+                                {
+                                    MethodBase m = f.GetMethod();
+
+                                    isNetFramework = isNetFramework.Value || (m.ReflectedType?
+                                                                               .Assembly?
+                                                                               .GetCustomAttribute<TargetFrameworkAttribute>()?
+                                                                               .FrameworkName?
+                                                                               .StartsWith(".NETFramework") ?? false);
+
+                                    if(isNetFramework.Value)
+                                    {
+                                        break;
+                                    }
+
+                                } catch(Exception)
+                                {
+
+                                }
+                            }
+                        }
+                        catch (Exception) { }
+                    }
                 }
 
                 return isNetFramework.Value;

@@ -7,7 +7,7 @@
 	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageProjectUrl>https://github.com/penguincms/Penguin.Reflection</PackageProjectUrl>
     <PackageIconUrl>http://www.penguinms.com/client/images/pg.png</PackageIconUrl>
-    <Version>3.15.9</Version>
+    <Version>3.15.10</Version>
 	<IncludeSymbols>true</IncludeSymbols>    
 <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
