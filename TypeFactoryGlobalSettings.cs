@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Penguin.Reflection
+﻿namespace Penguin.Reflection
 {
     /// <summary>
     /// Global settings for before the TypeFactory static constructor is called

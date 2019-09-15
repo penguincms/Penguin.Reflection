@@ -7,7 +7,7 @@
 	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageProjectUrl>https://github.com/penguincms/Penguin.Reflection</PackageProjectUrl>
     <PackageIconUrl>http://www.penguinms.com/client/images/pg.png</PackageIconUrl>
-    <Version>3.15.10</Version>
+    <Version>4.0.0</Version>
 	<IncludeSymbols>true</IncludeSymbols>    
 <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
@@ -27,8 +27,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Penguin.Debugging" Version="1.0.4" />
-    <PackageReference Include="Penguin.Reflection.Abstractions" Version="2.0.6" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Penguin.Debugging" Version="2.0.0" />
+    <PackageReference Include="Penguin.Reflection.Abstractions" Version="3.0.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
 

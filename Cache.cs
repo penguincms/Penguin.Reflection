@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 
@@ -10,7 +11,7 @@ namespace Penguin.Reflection
     /// <summary>
     /// A static cache designed to help speed up attribute retrieval
     /// </summary>
-    public static class Cache
+    public static class TypeCache
     {
         /// <summary>
         /// Gets the first attribute matching the specified type
@@ -30,6 +31,8 @@ namespace Penguin.Reflection
         /// <returns>All attribute instances from the current member</returns>
         public static AttributeInstance[] GetCustomAttributes(MemberInfo p)
         {
+            Contract.Assert(p != null);
+
             if (Attributes.TryGetValue(p, out AttributeInstance[] cachedAttributes))
             {
                 return cachedAttributes;
@@ -63,7 +66,6 @@ namespace Penguin.Reflection
 
                     toCheck = toCheck.BaseType;
                 } while (toCheck != null);
-
             }
             else
             {
@@ -84,12 +86,15 @@ namespace Penguin.Reflection
         /// <returns>All of the properties. All of them</returns>
         public static PropertyInfo[] GetProperties(Type t)
         {
-            if (!Properties.ContainsKey(t))
+            Contract.Assert(t != null);
+
+            if (!Properties.TryGetValue(t, out PropertyInfo[] properties))
             {
-                Properties.TryAdd(t, t.GetProperties());
+                properties = t.GetProperties();
+                Properties.TryAdd(t, properties);
             }
 
-            return Properties[t];
+            return properties;
         }
 
         /// <summary>
