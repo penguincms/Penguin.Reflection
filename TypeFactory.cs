@@ -372,7 +372,10 @@ namespace Penguin.Reflection
         /// <returns>All of the derived types</returns>
         public static IEnumerable<Type> GetDerivedTypes(Type t)
         {
-            Contract.Assert(t != null);
+            if(t is null)
+            {
+                throw new ArgumentNullException(nameof(t));
+            }
 
             if (t.IsInterface)
             {
@@ -432,6 +435,11 @@ namespace Penguin.Reflection
         /// <returns>The most derived type, or error if branching tree</returns>
         public static Type GetMostDerivedType(Type t)
         {
+            if (t is null)
+            {
+                throw new ArgumentNullException(nameof(t));
+            }
+
             return GetMostDerivedType(GetDerivedTypes(t).ToList(), t);
         }
 
