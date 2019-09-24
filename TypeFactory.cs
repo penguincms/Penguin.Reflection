@@ -19,66 +19,6 @@ namespace Penguin.Reflection
     /// </summary>
     public static class TypeFactory
     {
-        private const string NET_FRAMEWORK = ".NETFramework";
-
-
-        /// <summary>
-        /// Returns true if the executing application is .NetFramework opposed to Core or Standard (or other)
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
-        public static bool IsNetFramework
-        {
-            get
-            {
-                if (!_IsNetFramework.HasValue)
-                {
-                    Assembly entry = Assembly.GetEntryAssembly();
-
-                    if (entry != null)
-                    {
-                        _IsNetFramework = entry.GetCustomAttribute<TargetFrameworkAttribute>()?
-                                                .FrameworkName
-                                                .StartsWith(NET_FRAMEWORK, StringComparison.OrdinalIgnoreCase);
-                    }
-                    else
-                    {
-                        _IsNetFramework = false;
-
-                        try
-                        {
-                            //Literally crawl the whole fucking stack looking for the attribute if theres no entry assembly. If a single one is NetFramework
-                            //Then we (rightly?) assume the whole thing is.
-                            foreach (StackFrame f in new StackTrace().GetFrames())
-                            {
-                                try
-                                {
-                                    MethodBase m = f.GetMethod();
-
-                                    _IsNetFramework = _IsNetFramework.Value || (m.ReflectedType?
-                                                                               .Assembly?
-                                                                               .GetCustomAttribute<TargetFrameworkAttribute>()?
-                                                                               .FrameworkName?
-                                                                               .StartsWith(NET_FRAMEWORK, StringComparison.OrdinalIgnoreCase) ?? false);
-
-                                    if (_IsNetFramework.Value)
-                                    {
-                                        break;
-                                    }
-                                }
-                                catch (Exception)
-                                {
-                                }
-                            }
-                        }
-                        catch (Exception) { }
-                    }
-                }
-
-                return _IsNetFramework.Value;
-            }
-        }
-
-
         /// <summary>
         /// Since everything is cached, we need to make sure ALL potential assemblies are loaded or we might end up missing classes because
         /// the assembly hasn't been loaded yet. Consider only loading whitelisted references if this is slow
@@ -773,24 +713,11 @@ namespace Penguin.Reflection
 
         private static Assembly LoadAssembly(string path, AssemblyName an)
         {
-            if (IsNetFramework)
-            {
-                return LoadNetFrameworkAssembly(an);
-            }
-            else
-            {
-                return LoadNetCoreAssembly(path);
-            }
-        }
-
-        private static Assembly LoadNetCoreAssembly(string path)
-        {
-            return System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
-        }
-
-        private static Assembly LoadNetFrameworkAssembly(AssemblyName an)
-        {
+#if NET48
             return AppDomain.CurrentDomain.Load(an);
+#else
+            return System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
+#endif
         }
     }
 }

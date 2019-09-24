@@ -1,15 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="Penguin.Projects.Shared\Penguin.Projects.Shared.csproj" />
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net48</TargetFrameworks>
     <PackageProjectUrl>https://github.com/penguincms/Penguin.Reflection</PackageProjectUrl>
-    <Version>4.0.1</Version>
+    <Version>4.0.2</Version>
     <Description>Super helpful Reflection methods for Caching, as well as a static class designed to greatly simplify and speed up reflective searching. Supports (requires, for now) whitelisting assemblies and provides methods such as GetAllImplementations, GetAllTypes, GetDerivedTypes, GetMostDerivedType, GetTypeByFullName and more. Very helpful in MetaData driven systems.</Description>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Penguin.Debugging" Version="2.0.0" />
-    <PackageReference Include="Penguin.Reflection.Abstractions" Version="3.0.0" />
+  <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Penguin.Debugging" Version="2.0.1" />
+    <PackageReference Include="Penguin.Reflection.Abstractions" Version="3.0.0" />
   </ItemGroup>
 </Project>
