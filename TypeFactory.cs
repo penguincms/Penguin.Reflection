@@ -202,7 +202,6 @@ namespace Penguin.Reflection
             return a;
         }
 
-
         /// <summary>
         /// Gets all types in the specified assembly (where not compiler generated)
         /// </summary>
@@ -312,7 +311,7 @@ namespace Penguin.Reflection
         /// <returns>All of the derived types</returns>
         public static IEnumerable<Type> GetDerivedTypes(Type t)
         {
-            if(t is null)
+            if (t is null)
             {
                 throw new ArgumentNullException(nameof(t));
             }
@@ -389,27 +388,44 @@ namespace Penguin.Reflection
         /// <param name="types">The list of types to check</param>
         /// <param name="t">The base type to check for</param>
         /// <returns>The most derived type out of the list</returns>
-        public static Type GetMostDerivedType(List<Type> types, Type t)
+        public static Type GetMostDerivedType(IEnumerable<Type> types, Type t)
         {
-            List<Type> BaseTypes = types.Select(it => it.BaseType).Where(b => b != null).Distinct().ToList();
-
-            List<Type> toReturn = new List<Type>();
-
-            void RemoveBase(Type tr)
+            if (types is null)
             {
-                if (tr is null)
-                {
-                    return;
-                }
-
-                RemoveBase(tr.BaseType);
-
-                types.Remove(tr);
+                throw new ArgumentNullException(nameof(types));
             }
 
-            foreach (Type b in BaseTypes)
+            return GetMostDerivedType(types.ToList(), t);
+        }
+
+        /// <summary>
+        /// Gets the most derived type matching the base type, from a custom list of types
+        /// </summary>
+        /// <param name="types">The list of types to check</param>
+        /// <param name="t">The base type to check for</param>
+        /// <returns>The most derived type out of the list</returns>
+        public static Type GetMostDerivedType(List<Type> types, Type t)
+        {
+            if (types is null)
             {
-                RemoveBase(b);
+                throw new ArgumentNullException(nameof(types));
+            }
+
+            if (t is null)
+            {
+                throw new ArgumentNullException(nameof(t));
+            }
+
+            foreach (Type toCheckA in types.ToList())
+            {
+                foreach (Type toCheckB in types.ToList())
+                {
+                    if (toCheckA != toCheckB && toCheckA.IsAssignableFrom(toCheckB))
+                    {
+                        types.Remove(toCheckA);
+                        break;
+                    }
+                }
             }
 
             if (types.Count() > 1)
@@ -620,8 +636,6 @@ namespace Penguin.Reflection
         private static ConcurrentDictionary<string, ICollection<Type>> AssemblyTypes { get; set; } = new ConcurrentDictionary<string, ICollection<Type>>();
 
         private static ConcurrentDictionary<Type, ICollection<Type>> DerivedTypes { get; set; } = new ConcurrentDictionary<Type, ICollection<Type>>();
-
-        private static bool? _IsNetFramework { get; set; }
 
         private static ConcurrentDictionary<string, ConcurrentDictionary<string, Type>> TypeMapping { get; set; } = new ConcurrentDictionary<string, ConcurrentDictionary<string, Type>>();
 

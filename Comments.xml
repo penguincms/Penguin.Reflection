@@ -157,6 +157,14 @@
             <param name="t">The base type to check for (Ex DbContext)</param>
             <returns>The most derived type, or error if branching tree</returns>
         </member>
+        <member name="M:Penguin.Reflection.TypeFactory.GetMostDerivedType(System.Collections.Generic.IEnumerable{System.Type},System.Type)">
+            <summary>
+            Gets the most derived type matching the base type, from a custom list of types
+            </summary>
+            <param name="types">The list of types to check</param>
+            <param name="t">The base type to check for</param>
+            <returns>The most derived type out of the list</returns>
+        </member>
         <member name="M:Penguin.Reflection.TypeFactory.GetMostDerivedType(System.Collections.Generic.List{System.Type},System.Type)">
             <summary>
             Gets the most derived type matching the base type, from a custom list of types
