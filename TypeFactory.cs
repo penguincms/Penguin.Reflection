@@ -166,7 +166,7 @@ namespace Penguin.Reflection
         /// <returns></returns>
         public static IEnumerable<Type> GetAllTypes()
         {
-            foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies().Distinct())
             {
                 foreach (Type t in GetAssemblyTypes(a))
                 {
@@ -220,7 +220,7 @@ namespace Penguin.Reflection
 
                 try
                 {
-                    types = a.GetTypes().Where(t => !Attribute.IsDefined(t, typeof(CompilerGeneratedAttribute), true)).ToList();
+                    types = a.GetTypes().Where(t => !Attribute.IsDefined(t, typeof(CompilerGeneratedAttribute), true)).Distinct().ToList();
                 }
                 catch (ReflectionTypeLoadException ex)
                 {
@@ -250,6 +250,8 @@ namespace Penguin.Reflection
                     {
                         StaticLogger.Log("RE: Failed to enumerate loaded types: " + exx.Message, StaticLogger.LoggingLevel.Call);
                     }
+
+                    types = types.Distinct().ToList();
                 }
                 catch (Exception ex)
                 {
