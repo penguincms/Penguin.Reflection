@@ -1,5 +1,6 @@
 ﻿using Penguin.Debugging;
 using Penguin.Reflection.Extensions;
+using Penguin.Reflection.Objects;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
+using System.Security;
 using System.Text.RegularExpressions;
 
 namespace Penguin.Reflection
@@ -106,7 +108,7 @@ namespace Penguin.Reflection
                         try
                         {
                             AssemblyName an = AssemblyName.GetAssemblyName(loadPath);
-                            a = LoadAssembly(loadPath, an);
+                            a = LoadAssembly(loadPath, an, true);
                             AssembliesByName.TryAdd(an.Name, a);
                         }
                         catch (Exception ex)
@@ -137,10 +139,30 @@ namespace Penguin.Reflection
 
             StaticLogger.Log($"RE: {nameof(TypeFactory)} static initialization completed", StaticLogger.LoggingLevel.Final);
 
+            try
+            {
+                AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
+
+                List<Assembly> CurrentlyLoadedAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
+
+                foreach (Assembly assembly in CurrentlyLoadedAssemblies)
+                {
+                    CheckLoadingPath(assembly.Location);
+                }
+            } catch(SecurityException ex)
+            {
+                StaticLogger.Log($"RE: A security exception was thrown attempting to subscribe to assembly load events: {ex.Message}", StaticLogger.LoggingLevel.Final);
+            }
+
             if (!TypeFactoryGlobalSettings.DisableFailedLoadSkip)
             {
                 File.WriteAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE), failedCache);
             }
+        }
+
+        private static void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
+        {
+            CheckLoadingPath(args.LoadedAssembly.Location);
         }
 
         /// <summary>
@@ -166,7 +188,7 @@ namespace Penguin.Reflection
         /// <returns></returns>
         public static IEnumerable<Type> GetAllTypes()
         {
-            foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies().Distinct())
+            foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies())
             {
                 foreach (Type t in GetAssemblyTypes(a))
                 {
@@ -212,7 +234,7 @@ namespace Penguin.Reflection
         {
             Contract.Assert(a != null);
 
-            if (!AssemblyTypes.ContainsKey(a.FullName))
+            if (!AssemblyTypes.TryGetValue(a.FullName, out AssemblyDefinition b))
             {
                 StaticLogger.Log($"RE: Getting types for assembly {a.FullName}", StaticLogger.LoggingLevel.Call);
 
@@ -268,14 +290,15 @@ namespace Penguin.Reflection
                     }
                 }
 
-                AssemblyTypes.TryAdd(a.FullName, types);
+                AssemblyTypes.TryAdd(a.FullName, new AssemblyDefinition() { ContainingAssembly = a, LoadedTypes = types});
 
                 return types.ToList();
             }
             else
             {
                 StaticLogger.Log($"RE: Using cached types for {a.FullName}", StaticLogger.LoggingLevel.Call);
-                return AssemblyTypes[a.FullName];
+
+                return b.LoadedTypes;
             }
         }
 
@@ -633,13 +656,12 @@ namespace Penguin.Reflection
             return failedCache;
         }
 
-        private static ConcurrentDictionary<string, Assembly> AssembliesByName { get; set; } = new ConcurrentDictionary<string, Assembly>();
-        private static ConcurrentDictionary<string, List<Assembly>> AssembliesThatReference { get; set; } = new ConcurrentDictionary<string, List<Assembly>>();
-        private static ConcurrentDictionary<string, ICollection<Type>> AssemblyTypes { get; set; } = new ConcurrentDictionary<string, ICollection<Type>>();
-
-        private static ConcurrentDictionary<Type, ICollection<Type>> DerivedTypes { get; set; } = new ConcurrentDictionary<Type, ICollection<Type>>();
-
-        private static ConcurrentDictionary<string, ConcurrentDictionary<string, Type>> TypeMapping { get; set; } = new ConcurrentDictionary<string, ConcurrentDictionary<string, Type>>();
+        private static HashSet<string> CurrentlyLoadedAssemblies = new HashSet<string>();
+        private static readonly ConcurrentDictionary<string, Assembly> AssembliesByName = new ConcurrentDictionary<string, Assembly>();
+        private static readonly ConcurrentDictionary<string, List<Assembly>> AssembliesThatReference = new ConcurrentDictionary<string, List<Assembly>>();
+        private static readonly ConcurrentDictionary<string, AssemblyDefinition> AssemblyTypes  = new ConcurrentDictionary<string, AssemblyDefinition>();
+        private static readonly ConcurrentDictionary<Type, ICollection<Type>> DerivedTypes = new ConcurrentDictionary<Type, ICollection<Type>>();
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Type>> TypeMapping = new ConcurrentDictionary<string, ConcurrentDictionary<string, Type>>();
 
         private static void AddReferenceInformation(Assembly a)
         {
@@ -727,8 +749,28 @@ namespace Penguin.Reflection
             return returnVal.ToArray();
         }
 
-        private static Assembly LoadAssembly(string path, AssemblyName an)
+        private static void CheckLoadingPath(string path)
         {
+            if(string.IsNullOrWhiteSpace(path))
+            {
+                return;
+            }
+
+            if(!CurrentlyLoadedAssemblies.Contains(path))
+            {
+                CurrentlyLoadedAssemblies.Add(path);
+            } else
+            {
+                throw new Exception($"The assembly found at {path} is being loaded, however it appears to have already been loaded. Loading the same assembly more than once causes type resolution issues and is a fatal error");
+            }
+        }
+
+        private static Assembly LoadAssembly(string path, AssemblyName an, bool skipDuplicateCheck = false)
+        {
+            if (!skipDuplicateCheck)
+            {
+                CheckLoadingPath(path);
+            }
 #if NET48
             return AppDomain.CurrentDomain.Load(an);
 #else
