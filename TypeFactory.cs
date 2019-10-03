@@ -108,7 +108,9 @@ namespace Penguin.Reflection
                         try
                         {
                             AssemblyName an = AssemblyName.GetAssemblyName(loadPath);
+
                             a = LoadAssembly(loadPath, an, true);
+
                             AssembliesByName.TryAdd(an.Name, a);
                         }
                         catch (Exception ex)
@@ -149,7 +151,8 @@ namespace Penguin.Reflection
                 {
                     CheckLoadingPath(assembly.Location);
                 }
-            } catch(SecurityException ex)
+            }
+            catch (SecurityException ex)
             {
                 StaticLogger.Log($"RE: A security exception was thrown attempting to subscribe to assembly load events: {ex.Message}", StaticLogger.LoggingLevel.Final);
             }
@@ -160,9 +163,13 @@ namespace Penguin.Reflection
             }
         }
 
+
         private static void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
         {
-            CheckLoadingPath(args.LoadedAssembly.Location);
+            if (!args.LoadedAssembly.IsDynamic)
+            {
+                CheckLoadingPath(args.LoadedAssembly.Location);
+            }
         }
 
         /// <summary>
@@ -290,7 +297,7 @@ namespace Penguin.Reflection
                     }
                 }
 
-                AssemblyTypes.TryAdd(a.FullName, new AssemblyDefinition() { ContainingAssembly = a, LoadedTypes = types});
+                AssemblyTypes.TryAdd(a.FullName, new AssemblyDefinition() { ContainingAssembly = a, LoadedTypes = types });
 
                 return types.ToList();
             }
@@ -659,7 +666,7 @@ namespace Penguin.Reflection
         private static HashSet<string> CurrentlyLoadedAssemblies = new HashSet<string>();
         private static readonly ConcurrentDictionary<string, Assembly> AssembliesByName = new ConcurrentDictionary<string, Assembly>();
         private static readonly ConcurrentDictionary<string, List<Assembly>> AssembliesThatReference = new ConcurrentDictionary<string, List<Assembly>>();
-        private static readonly ConcurrentDictionary<string, AssemblyDefinition> AssemblyTypes  = new ConcurrentDictionary<string, AssemblyDefinition>();
+        private static readonly ConcurrentDictionary<string, AssemblyDefinition> AssemblyTypes = new ConcurrentDictionary<string, AssemblyDefinition>();
         private static readonly ConcurrentDictionary<Type, ICollection<Type>> DerivedTypes = new ConcurrentDictionary<Type, ICollection<Type>>();
         private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Type>> TypeMapping = new ConcurrentDictionary<string, ConcurrentDictionary<string, Type>>();
 
@@ -751,17 +758,27 @@ namespace Penguin.Reflection
 
         private static void CheckLoadingPath(string path)
         {
-            if(string.IsNullOrWhiteSpace(path))
+            if (string.IsNullOrWhiteSpace(path))
             {
                 return;
             }
 
-            if(!CurrentlyLoadedAssemblies.Contains(path))
+            if (!CurrentlyLoadedAssemblies.Contains(path))
             {
                 CurrentlyLoadedAssemblies.Add(path);
-            } else
+            }
+            else
             {
-                throw new Exception($"The assembly found at {path} is being loaded, however it appears to have already been loaded. Loading the same assembly more than once causes type resolution issues and is a fatal error");
+                try
+                {
+
+
+                    throw new Exception($"The assembly found at {path} is being loaded, however it appears to have already been loaded. Loading the same assembly more than once causes type resolution issues and is a fatal error");
+                }
+                catch (Exception)
+                {
+
+                }
             }
         }
 
