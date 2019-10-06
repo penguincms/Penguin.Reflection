@@ -438,6 +438,8 @@ namespace Penguin.Reflection
         /// <returns>The most derived type out of the list</returns>
         public static Type GetMostDerivedType(List<Type> types, Type t)
         {
+
+
             if (types is null)
             {
                 throw new ArgumentNullException(nameof(types));
@@ -448,24 +450,26 @@ namespace Penguin.Reflection
                 throw new ArgumentNullException(nameof(t));
             }
 
-            foreach (Type toCheckA in types.ToList())
+            List<Type> toProcess = types.Where(tt => t.IsAssignableFrom(tt)).ToList();
+
+            foreach (Type toCheckA in toProcess.ToList())
             {
-                foreach (Type toCheckB in types.ToList())
+                foreach (Type toCheckB in toProcess.ToList())
                 {
                     if (toCheckA != toCheckB && toCheckA.IsAssignableFrom(toCheckB))
                     {
-                        types.Remove(toCheckA);
+                        toProcess.Remove(toCheckA);
                         break;
                     }
                 }
             }
 
-            if (types.Count() > 1)
+            if (toProcess.Count() > 1)
             {
                 throw new Exception($"More than one terminating type found for base {t.FullName}");
             }
 
-            return types.FirstOrDefault() ?? t;
+            return toProcess.FirstOrDefault() ?? t;
         }
 
         /// <summary>
@@ -663,7 +667,7 @@ namespace Penguin.Reflection
             return failedCache;
         }
 
-        private static HashSet<string> CurrentlyLoadedAssemblies = new HashSet<string>();
+        private static readonly HashSet<string> CurrentlyLoadedAssemblies = new HashSet<string>();
         private static readonly ConcurrentDictionary<string, Assembly> AssembliesByName = new ConcurrentDictionary<string, Assembly>();
         private static readonly ConcurrentDictionary<string, List<Assembly>> AssembliesThatReference = new ConcurrentDictionary<string, List<Assembly>>();
         private static readonly ConcurrentDictionary<string, AssemblyDefinition> AssemblyTypes = new ConcurrentDictionary<string, AssemblyDefinition>();
