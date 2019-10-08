@@ -87,18 +87,20 @@
             the assembly hasn't been loaded yet. Consider only loading whitelisted references if this is slow
             </summary>
         </member>
-        <member name="M:Penguin.Reflection.TypeFactory.GetAllImplementations``1">
+        <member name="M:Penguin.Reflection.TypeFactory.GetAllImplementations``1(System.Boolean)">
             <summary>
             Gets all types in whitelisted assemblies that implement a given interface
             </summary>
             <typeparam name="T">The interface to check for</typeparam>
+            <param name="IncludeAbstract">If true, the result set will include abstract types</param>
             <returns>All of the aforementioned types</returns>
         </member>
-        <member name="M:Penguin.Reflection.TypeFactory.GetAllImplementations(System.Type)">
+        <member name="M:Penguin.Reflection.TypeFactory.GetAllImplementations(System.Type,System.Boolean)">
             <summary>
             Gets all types in whitelisted assemblies that implement a given interface
             </summary>
-            <param name="InterfaceType">The interface to check for</param>
+            <param name="InterfaceType">The interface to check for, will also search for implementations of open generics</param>
+            <param name="IncludeAbstract">If true, the result set will include abstract types</param>
             <returns>All of the aforementioned types</returns>
         </member>
         <member name="M:Penguin.Reflection.TypeFactory.GetAllTypes">

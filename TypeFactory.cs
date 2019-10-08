@@ -176,17 +176,48 @@ namespace Penguin.Reflection
         /// Gets all types in whitelisted assemblies that implement a given interface
         /// </summary>
         /// <typeparam name="T">The interface to check for</typeparam>
+        /// <param name="IncludeAbstract">If true, the result set will include abstract types</param>
         /// <returns>All of the aforementioned types</returns>
-        public static IEnumerable<Type> GetAllImplementations<T>() => GetAllImplementations(typeof(T));
+        public static IEnumerable<Type> GetAllImplementations<T>(bool IncludeAbstract = false) => GetAllImplementations(typeof(T), IncludeAbstract);
 
         /// <summary>
         /// Gets all types in whitelisted assemblies that implement a given interface
         /// </summary>
-        /// <param name="InterfaceType">The interface to check for</param>
+        /// <param name="InterfaceType">The interface to check for, will also search for implementations of open generics</param>
+        /// <param name="IncludeAbstract">If true, the result set will include abstract types</param>
         /// <returns>All of the aforementioned types</returns>
-        public static IEnumerable<Type> GetAllImplementations(Type InterfaceType)
+        public static IEnumerable<Type> GetAllImplementations(Type InterfaceType, bool IncludeAbstract = false)
         {
-            return GetDependentAssemblies(InterfaceType).GetAllTypes().Where(p => InterfaceType.IsAssignableFrom(p) && !p.IsAbstract).Distinct();
+            if (InterfaceType is null)
+            {
+                throw new ArgumentNullException(nameof(InterfaceType));
+            }
+
+            IEnumerable<Type> candidates = GetDependentAssemblies(InterfaceType).GetAllTypes().Distinct();          
+
+            if (InterfaceType.IsGenericTypeDefinition) {
+                foreach (Type t in candidates)
+                {
+                    if(!IncludeAbstract && t.IsAbstract)
+                    {
+                        continue;
+                    }
+
+                    bool isValid = t.GetInterfaces().Any(x =>
+                      x.IsGenericType &&
+                      x.GetGenericTypeDefinition() == InterfaceType);
+
+                    if(isValid)
+                    {
+                        yield return t;
+                    }
+                }
+            } else
+            {
+                foreach(Type t in candidates.Where(p => InterfaceType.IsAssignableFrom(p) && (IncludeAbstract || !p.IsAbstract))){
+                    yield return t;
+                }
+            }
         }
 
         /// <summary>
