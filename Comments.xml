@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <doc>
     <assembly>
-        <name>Penguin.Reflection</name>
+        <name>Penguin.Reflection.Local</name>
     </assembly>
     <members>
         <member name="T:Penguin.Reflection.TypeCache">

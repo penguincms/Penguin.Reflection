@@ -1,0 +1,19 @@
+Microsoft (R) Build Engine version 16.3.0+0f4c62fea for .NET Core
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Restore completed in 26.6 ms for C:\Penguin\Repositories\Penguin.Reflection\Penguin.Reflection.Local.csproj.
+  Restore completed in 26.6 ms for C:\Penguin\Repositories\Penguin.Extensions.Exceptions\Penguin.Extensions.Exceptions.Local.csproj.
+  Restore completed in 26.57 ms for C:\Penguin\Repositories\Penguin.Debugging\Penguin.Debugging.Local.csproj.
+  Restore completed in 26.62 ms for C:\Penguin\Repositories\Penguin.Reflection.Abstractions\Penguin.Reflection.Abstractions.Local.csproj.
+  Penguin.Reflection.Abstractions.Local -> C:\Penguin\Repositories\Penguin.Reflection.Abstractions\bin\Release\netstandard2.0\Penguin.Reflection.Abstractions.Local.dll
+  Penguin.Extensions.Exceptions.Local -> C:\Penguin\Repositories\Penguin.Extensions.Exceptions\bin\Release\netstandard2.0\Penguin.Extensions.Exceptions.Local.dll
+  Penguin.Debugging.Local -> C:\Penguin\Repositories\Penguin.Debugging\bin\Release\netstandard2.0\Penguin.Debugging.Local.dll
+  Penguin.Reflection.Local -> C:\Penguin\Repositories\Penguin.Reflection\bin\Release\net48\Penguin.Reflection.Local.dll
+  Penguin.Reflection.Local -> C:\Penguin\Repositories\Penguin.Reflection\bin\Release\netstandard2.0\Penguin.Reflection.Local.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.42
+

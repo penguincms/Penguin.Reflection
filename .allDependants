@@ -1,4 +1,20 @@
 Penguin.Cms.Core
+Penguin.Cms.Modules.Core
+Penguin.Cms.Modules.Admin
+Penguin.Cms.Modules.Dynamic
+Penguin.Cms.Modules.Auditing
+Penguin.Cms.Modules.Configuration
+Penguin.Cms.Modules.Email
+Penguin.Cms.Modules.Errors
+Penguin.Cms.Modules.Files
+Penguin.Cms.Modules.Forms
+Penguin.Cms.Modules.Images
+Penguin.Cms.Modules.Navigation
+Penguin.Cms.Modules.Pages
+Penguin.Cms.Modules.Reporting
+Penguin.Cms.Modules.Security
+Penguin.Cms.Modules.Workers
+Penguin.Cms.Modules.Macros
 Penguin.Cms.Forms.Repositories
 Penguin.Cms.Web.Pages
 Penguin.Cms.Workers
@@ -6,8 +22,9 @@ Penguin.Cms.Workers.Email
 Penguin.DependencyInjection
 Penguin.Cms.Email.DependencyInjection
 Penguin.Cms.Web
+Penguin.Cms.Modules.Communication
+Penguin.Cms.Modules.InternalMessaging
 Penguin.Messaging.DependencyInjection
-Penguin.Persistence.Repositories.DependencyInjection
 Penguin.Web.DependencyInjection
 Penguin.Web.Mvc.DependencyInjection
 Penguin.Workers.Harness
@@ -28,7 +45,6 @@ Penguin.Cms.Security.Repositories
 Penguin.Cms.InternalMessaging.Repositories
 Penguin.Cms.Web.Security.Repositories
 Penguin.Workers.Repositories
-Penguin.Errors.Repositories
 Penguin.Reflection.Serialization.Abstractions
 Penguin.Reflection.Serialization
 Penguin.Persistence.Database.Serialization.Extensions
@@ -36,4 +52,5 @@ Penguin.Reflection.Serialization.Extensions
 Penguin.Web.Dynamic
 Penguin.Web.Mvc.Dynamic
 Penguin.Testing
+Penguin.Cms.Modules.Testing
 Penguin.Web.Errors

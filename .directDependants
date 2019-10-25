@@ -1,11 +1,11 @@
 Penguin.Cms.Core
 Penguin.Cms.Forms.Repositories
+Penguin.Cms.Modules.Workers
 Penguin.Cms.Web.Pages
 Penguin.Cms.Workers
 Penguin.DependencyInjection
 Penguin.Persistence.EntityFramework
 Penguin.Persistence.Repositories
-Penguin.Persistence.Repositories.DependencyInjection
 Penguin.Persistence.Repositories.EntityFramework
 Penguin.Reflection.Serialization.Abstractions
 Penguin.Testing
