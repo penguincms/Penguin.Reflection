@@ -149,7 +149,10 @@ namespace Penguin.Reflection
 
                 foreach (Assembly assembly in CurrentlyLoadedAssemblies)
                 {
-                    CheckLoadingPath(assembly.Location);
+                    if (!assembly.IsDynamic)
+                    {
+                        CheckLoadingPath(assembly.Location);
+                    }
                 }
             }
             catch (SecurityException ex)
