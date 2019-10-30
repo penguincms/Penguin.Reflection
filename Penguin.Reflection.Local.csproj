@@ -5,6 +5,8 @@
     <PackageProjectUrl>https://github.com/penguincms/Penguin.Reflection</PackageProjectUrl>
     <Version>4.0.8</Version>
     <Description>Super helpful Reflection methods for Caching, as well as a static class designed to greatly simplify and speed up reflective searching. Supports (requires, for now) whitelisting assemblies and provides methods such as GetAllImplementations, GetAllTypes, GetDerivedTypes, GetMostDerivedType, GetTypeByFullName and more. Very helpful in MetaData driven systems.</Description>
+    <AssemblyName>Penguin.Reflection</AssemblyName>
+    <RootNamespace>Penguin.Reflection</RootNamespace>
   </PropertyGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
