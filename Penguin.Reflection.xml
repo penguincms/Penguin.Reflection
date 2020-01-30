@@ -81,29 +81,26 @@
             A static class used to perform all kinds of type based reflections over a whitelist of assemblies for finding and resolving many kinds of queries
             </summary>
         </member>
-        <member name="P:Penguin.Reflection.TypeFactory.IsNetFramework">
-            <summary>
-            Returns true if the executing application is .NetFramework opposed to Core or Standard (or other)
-            </summary>
-        </member>
         <member name="M:Penguin.Reflection.TypeFactory.#cctor">
             <summary>
             Since everything is cached, we need to make sure ALL potential assemblies are loaded or we might end up missing classes because
             the assembly hasn't been loaded yet. Consider only loading whitelisted references if this is slow
             </summary>
         </member>
-        <member name="M:Penguin.Reflection.TypeFactory.GetAllImplementations``1">
+        <member name="M:Penguin.Reflection.TypeFactory.GetAllImplementations``1(System.Boolean)">
             <summary>
             Gets all types in whitelisted assemblies that implement a given interface
             </summary>
             <typeparam name="T">The interface to check for</typeparam>
+            <param name="IncludeAbstract">If true, the result set will include abstract types</param>
             <returns>All of the aforementioned types</returns>
         </member>
-        <member name="M:Penguin.Reflection.TypeFactory.GetAllImplementations(System.Type)">
+        <member name="M:Penguin.Reflection.TypeFactory.GetAllImplementations(System.Type,System.Boolean)">
             <summary>
             Gets all types in whitelisted assemblies that implement a given interface
             </summary>
-            <param name="InterfaceType">The interface to check for</param>
+            <param name="InterfaceType">The interface to check for, will also search for implementations of open generics</param>
+            <param name="IncludeAbstract">If true, the result set will include abstract types</param>
             <returns>All of the aforementioned types</returns>
         </member>
         <member name="M:Penguin.Reflection.TypeFactory.GetAllTypes">
@@ -161,6 +158,14 @@
             </summary>
             <param name="t">The base type to check for (Ex DbContext)</param>
             <returns>The most derived type, or error if branching tree</returns>
+        </member>
+        <member name="M:Penguin.Reflection.TypeFactory.GetMostDerivedType(System.Collections.Generic.IEnumerable{System.Type},System.Type)">
+            <summary>
+            Gets the most derived type matching the base type, from a custom list of types
+            </summary>
+            <param name="types">The list of types to check</param>
+            <param name="t">The base type to check for</param>
+            <returns>The most derived type out of the list</returns>
         </member>
         <member name="M:Penguin.Reflection.TypeFactory.GetMostDerivedType(System.Collections.Generic.List{System.Type},System.Type)">
             <summary>
