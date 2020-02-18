@@ -13,6 +13,10 @@ namespace Penguin.Reflection
     /// </summary>
     public static class TypeCache
     {
+        internal static ConcurrentDictionary<MemberInfo, AttributeInstance[]> Attributes { get; set; } = new ConcurrentDictionary<MemberInfo, AttributeInstance[]>();
+
+        internal static ConcurrentDictionary<Type, PropertyInfo[]> Properties { get; set; } = new ConcurrentDictionary<Type, PropertyInfo[]>();
+
         /// <summary>
         /// Gets the first attribute matching the specified type
         /// </summary>
@@ -118,8 +122,5 @@ namespace Penguin.Reflection
         {
             return GetCustomAttributes(p).Any(a => a.Instance.GetType() == t);
         }
-
-        internal static ConcurrentDictionary<MemberInfo, AttributeInstance[]> Attributes { get; set; } = new ConcurrentDictionary<MemberInfo, AttributeInstance[]>();
-        internal static ConcurrentDictionary<Type, PropertyInfo[]> Properties { get; set; } = new ConcurrentDictionary<Type, PropertyInfo[]>();
     }
 }

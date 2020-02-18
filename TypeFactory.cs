@@ -4,13 +4,11 @@ using Penguin.Reflection.Objects;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.Versioning;
 using System.Security;
 using System.Text.RegularExpressions;
 
@@ -166,7 +164,6 @@ namespace Penguin.Reflection
             }
         }
 
-
         private static void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
         {
             if (!args.LoadedAssembly.IsDynamic)
@@ -196,12 +193,13 @@ namespace Penguin.Reflection
                 throw new ArgumentNullException(nameof(InterfaceType));
             }
 
-            IEnumerable<Type> candidates = GetDependentAssemblies(InterfaceType).GetAllTypes().Distinct();          
+            IEnumerable<Type> candidates = GetDependentAssemblies(InterfaceType).GetAllTypes().Distinct();
 
-            if (InterfaceType.IsGenericTypeDefinition) {
+            if (InterfaceType.IsGenericTypeDefinition)
+            {
                 foreach (Type t in candidates)
                 {
-                    if(!IncludeAbstract && t.IsAbstract)
+                    if (!IncludeAbstract && t.IsAbstract)
                     {
                         continue;
                     }
@@ -210,14 +208,16 @@ namespace Penguin.Reflection
                       x.IsGenericType &&
                       x.GetGenericTypeDefinition() == InterfaceType);
 
-                    if(isValid)
+                    if (isValid)
                     {
                         yield return t;
                     }
                 }
-            } else
+            }
+            else
             {
-                foreach(Type t in candidates.Where(p => InterfaceType.IsAssignableFrom(p) && (IncludeAbstract || !p.IsAbstract))){
+                foreach (Type t in candidates.Where(p => InterfaceType.IsAssignableFrom(p) && (IncludeAbstract || !p.IsAbstract)))
+                {
                     yield return t;
                 }
             }
@@ -472,8 +472,6 @@ namespace Penguin.Reflection
         /// <returns>The most derived type out of the list</returns>
         public static Type GetMostDerivedType(List<Type> types, Type t)
         {
-
-
             if (types is null)
             {
                 throw new ArgumentNullException(nameof(types));
@@ -809,13 +807,10 @@ namespace Penguin.Reflection
             {
                 try
                 {
-
-
                     throw new Exception($"The assembly found at {path} is being loaded, however it appears to have already been loaded. Loading the same assembly more than once causes type resolution issues and is a fatal error");
                 }
                 catch (Exception)
                 {
-
                 }
             }
         }
