@@ -836,6 +836,7 @@ namespace Penguin.Reflection
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1801:Review unused parameters", Justification = "<Pending>")]
         private static Assembly LoadAssembly(string path, AssemblyName an, bool skipDuplicateCheck = false)
         {
             if (!skipDuplicateCheck)
