@@ -4,6 +4,7 @@ using Penguin.Reflection.Objects;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -836,7 +837,6 @@ namespace Penguin.Reflection
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA1801:Review unused parameters", Justification = "<Pending>")]
         private static Assembly LoadAssembly(string path, AssemblyName an, bool skipDuplicateCheck = false)
         {
             if (!skipDuplicateCheck)
@@ -846,6 +846,7 @@ namespace Penguin.Reflection
 #if NET48
             return AppDomain.CurrentDomain.Load(an);
 #else
+            Debug.WriteLine(an?.ToString());
             return System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
 #endif
         }
