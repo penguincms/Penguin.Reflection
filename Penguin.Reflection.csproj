@@ -13,7 +13,7 @@
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Penguin.Reflection.Abstractions" Version="5.0.2-TA9KKLU" />
-    <PackageReference Include="Penguin.Debugging" Version="5.0.2-TA9KKLU" />
+    <PackageReference Include="Penguin.Reflection.Abstractions" Version="5.0.2-TACG2R6" />
+    <PackageReference Include="Penguin.Debugging" Version="5.0.2-TACG2R6" />
   </ItemGroup>
 </Project>
