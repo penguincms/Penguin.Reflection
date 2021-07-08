@@ -24,7 +24,6 @@ namespace Penguin.Reflection
         /// Since everything is cached, we need to make sure ALL potential assemblies are loaded or we might end up missing classes because
         /// the assembly hasn't been loaded yet. Consider only loading whitelisted references if this is slow
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         static TypeFactory()
         {
             StaticLogger.Log($"Penguin.Reflection: {Assembly.GetExecutingAssembly().GetName().Version}", StaticLogger.LoggingLevel.Call);
@@ -274,7 +273,6 @@ namespace Penguin.Reflection
         /// </summary>
         /// <param name="a">The assembly to check</param>
         /// <returns>All the types in the assembly</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         public static IEnumerable<Type> GetAssemblyTypes(Assembly a)
         {
             Contract.Assert(a != null);
@@ -683,7 +681,6 @@ namespace Penguin.Reflection
         internal const string BLACKLIST_CACHE = "TypeFactory.BlackList.Cache";
         internal const string FAILED_CACHE = "TypeFactory.Failed.Cache";
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "<Pending>")]
         internal static List<string> LoadBlacklistCache()
         {
             try
