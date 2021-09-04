@@ -14,6 +14,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Penguin.Reflection.Abstractions" Version="5.0.6-TAHULSY" />
-    <PackageReference Include="Penguin.Debugging" Version="5.0.6-TAKDH3F" />
+    <PackageReference Include="Penguin.Debugging" Version="5.0.6-TAKOD19" />
   </ItemGroup>
 </Project>
