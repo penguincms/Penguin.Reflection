@@ -44,9 +44,6 @@ namespace Penguin.Reflection
         /// </summary>
         /// <typeparam name="T">The interface to check for</typeparam>
         /// <returns>All the types</returns>
-        public static IEnumerable<Type> GetTypesThatImplementInterface<T>()
-        {
-            return Assembly.GetExecutingAssembly().GetTypes().Where(t => typeof(T).IsAssignableFrom(t) && !t.IsAbstract);
-        }
+        public static IEnumerable<Type> GetTypesThatImplementInterface<T>() => Assembly.GetExecutingAssembly().GetTypes().Where(t => typeof(T).IsAssignableFrom(t) && !t.IsAbstract);
     }
 }

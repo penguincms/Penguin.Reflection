@@ -178,10 +178,7 @@ namespace Penguin.Reflection
         /// <typeparam name="T">The interface to check for</typeparam>
         /// <param name="IncludeAbstract">If true, the result set will include abstract types</param>
         /// <returns>All of the aforementioned types</returns>
-        public static IEnumerable<Type> GetAllImplementations<T>(bool IncludeAbstract = false)
-        {
-            return GetAllImplementations(typeof(T), IncludeAbstract);
-        }
+        public static IEnumerable<Type> GetAllImplementations<T>(bool IncludeAbstract = false) => GetAllImplementations(typeof(T), IncludeAbstract);
 
         /// <summary>
         /// Gets all types in whitelisted assemblies that implement a given interface
@@ -511,20 +508,14 @@ namespace Penguin.Reflection
         /// </summary>
         /// <param name="t">The type to get the properies of</param>
         /// <returns>All of the properties. All of them.</returns>
-        public static PropertyInfo[] GetProperties(Type t)
-        {
-            return TypeCache.GetProperties(t);
-        }
+        public static PropertyInfo[] GetProperties(Type t) => TypeCache.GetProperties(t);
 
         /// <summary>
         /// Gets all the properties of the object
         /// </summary>
         /// <param name="o">The object to get the properties of</param>
         /// <returns>All of the properties. All of them.</returns>
-        public static PropertyInfo[] GetProperties(object o)
-        {
-            return GetProperties(GetType(o));
-        }
+        public static PropertyInfo[] GetProperties(object o) => GetProperties(GetType(o));
 
         /// <summary>
         /// Gets all assemblies that are referenced recursively by the assembly containing the given type
@@ -640,10 +631,7 @@ namespace Penguin.Reflection
         /// <param name="toCheck">The type to check</param>
         /// <param name="attribute">the attribute type to check for</param>
         /// <returns>Whether or not the attribute is declared on the type</returns>
-        public static bool HasAttribute(MemberInfo toCheck, Type attribute)
-        {
-            return TypeCache.HasAttribute(toCheck, attribute);
-        }
+        public static bool HasAttribute(MemberInfo toCheck, Type attribute) => TypeCache.HasAttribute(toCheck, attribute);
 
         /// <summary>
         /// Checks if an object has an attribute declared on its type
@@ -651,10 +639,7 @@ namespace Penguin.Reflection
         /// <param name="o">The object to check</param>
         /// <param name="attribute">The attribute to check for</param>
         /// <returns>Whether or not the attribute is declared on the object type</returns>
-        public static bool HasAttribute(object o, Type attribute)
-        {
-            return HasAttribute(GetType(o), attribute);
-        }
+        public static bool HasAttribute(object o, Type attribute) => HasAttribute(GetType(o), attribute);
 
         /// <summary>
         /// Retrieves the first matching attribute of the specified type
@@ -662,10 +647,7 @@ namespace Penguin.Reflection
         /// <typeparam name="T">The base type to find</typeparam>
         /// <param name="toCheck">The member to check</param>
         /// <returns>The first matching attribute</returns>
-        public static T RetrieveAttribute<T>(MemberInfo toCheck) where T : Attribute
-        {
-            return toCheck.GetCustomAttribute<T>();
-        }
+        public static T RetrieveAttribute<T>(MemberInfo toCheck) where T : Attribute => toCheck.GetCustomAttribute<T>();
 
         /// <summary>
         /// Gets a list of all custom attributes on the member
@@ -673,10 +655,7 @@ namespace Penguin.Reflection
         /// <typeparam name="T">The base type of the attributes to get</typeparam>
         /// <param name="toCheck">The member to retrieve the information for</param>
         /// <returns>all custom attributes</returns>
-        public static List<T> RetrieveAttributes<T>(MemberInfo toCheck) where T : Attribute
-        {
-            return toCheck.GetCustomAttributes<T>().ToList();
-        }
+        public static List<T> RetrieveAttributes<T>(MemberInfo toCheck) where T : Attribute => toCheck.GetCustomAttributes<T>().ToList();
 
         internal const string BLACKLIST_CACHE = "TypeFactory.BlackList.Cache";
         internal const string FAILED_CACHE = "TypeFactory.Failed.Cache";
