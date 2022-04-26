@@ -75,7 +75,7 @@ namespace Penguin.Reflection
 
             AttributeInstance[] toReturn = attributes.ToArray();
 
-            Attributes.TryAdd(p, toReturn);
+            _ = Attributes.TryAdd(p, toReturn);
 
             return toReturn;
         }
@@ -92,7 +92,7 @@ namespace Penguin.Reflection
             if (!Properties.TryGetValue(t, out PropertyInfo[] properties))
             {
                 properties = t.GetProperties();
-                Properties.TryAdd(t, properties);
+                _ = Properties.TryAdd(t, properties);
             }
 
             return properties;

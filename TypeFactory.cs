@@ -81,7 +81,7 @@ namespace Penguin.Reflection
 
                 foreach (string loadPath in referencedPaths)
                 {
-                    SearchedPaths.Add(loadPath);
+                    _ = SearchedPaths.Add(loadPath);
 
                     //If we're not already loaded
                     if (!loadedPaths.TryGetValue(loadPath, out Assembly a))
@@ -109,7 +109,7 @@ namespace Penguin.Reflection
 
                             a = LoadAssembly(loadPath, an, true);
 
-                            AssembliesByName.TryAdd(an.Name, a);
+                            _ = AssembliesByName.TryAdd(an.Name, a);
                         }
                         catch (Exception ex)
                         {
@@ -259,7 +259,7 @@ namespace Penguin.Reflection
             if (!AssembliesByName.TryGetValue(Name, out Assembly a))
             {
                 a = AppDomain.CurrentDomain.GetAssemblies().First(aa => aa.GetName().Name == Name);
-                AssembliesByName.TryAdd(Name, a);
+                _ = AssembliesByName.TryAdd(Name, a);
             }
 
             return a;
@@ -330,7 +330,7 @@ namespace Penguin.Reflection
                     }
                 }
 
-                AssemblyTypes.TryAdd(a.FullName, new AssemblyDefinition() { ContainingAssembly = a, LoadedTypes = types });
+                _ = AssemblyTypes.TryAdd(a.FullName, new AssemblyDefinition() { ContainingAssembly = a, LoadedTypes = types });
 
                 return types.ToList();
             }
@@ -420,7 +420,7 @@ namespace Penguin.Reflection
                     }
                 }
 
-                DerivedTypes.TryAdd(t, typesToReturn.ToList());
+                _ = DerivedTypes.TryAdd(t, typesToReturn.ToList());
 
                 StaticLogger.Log("RE: Finished type search", StaticLogger.LoggingLevel.Method);
 
@@ -489,7 +489,7 @@ namespace Penguin.Reflection
                 {
                     if (toCheckA != toCheckB && toCheckA.IsAssignableFrom(toCheckB))
                     {
-                        toProcess.Remove(toCheckA);
+                        _ = toProcess.Remove(toCheckA);
                         break;
                     }
                 }
@@ -611,14 +611,14 @@ namespace Penguin.Reflection
 
                 if (nameIsCached)
                 {
-                    TypeMapping[name].TryAdd(targetNamespace, targetType);
+                    _ = TypeMapping[name].TryAdd(targetNamespace, targetType);
                 }
                 else
                 {
                     ConcurrentDictionary<string, Type> namespaceDictionary = new ConcurrentDictionary<string, Type>();
-                    namespaceDictionary.TryAdd(targetNamespace, targetType);
+                    _ = namespaceDictionary.TryAdd(targetNamespace, targetType);
 
-                    TypeMapping.TryAdd(name, namespaceDictionary);
+                    _ = TypeMapping.TryAdd(name, namespaceDictionary);
                 }
             }
 
@@ -715,7 +715,7 @@ namespace Penguin.Reflection
                 }
                 else
                 {
-                    AssembliesThatReference.TryAdd(AniName, new List<Assembly> { a });
+                    _ = AssembliesThatReference.TryAdd(AniName, new List<Assembly> { a });
                 }
             }
         }
@@ -740,7 +740,7 @@ namespace Penguin.Reflection
                         continue;
                     }
 
-                    checkedAssemblies.Add(ai);
+                    _ = checkedAssemblies.Add(ai);
 
                     foreach (Assembly aii in GetDependentAssemblies(ai, checkedAssemblies, "----" + Prefix))
                     {
@@ -766,7 +766,7 @@ namespace Penguin.Reflection
                     continue;
                 }
 
-                checkedNames.Add(an);
+                _ = checkedNames.Add(an);
 
                 foreach (Assembly ai in GetReferencedAssemblies(GetAssemblyByName(an), checkedNames))
                 {
@@ -799,7 +799,7 @@ namespace Penguin.Reflection
 
             if (!CurrentlyLoadedAssemblies.Contains(path))
             {
-                CurrentlyLoadedAssemblies.Add(path);
+                _ = CurrentlyLoadedAssemblies.Add(path);
             }
             else
             {
