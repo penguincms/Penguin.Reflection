@@ -23,7 +23,10 @@ namespace Penguin.Reflection
         /// <typeparam name="T">The attribute type</typeparam>
         /// <param name="p">The member source</param>
         /// <returns>The first attribute matching the specified type</returns>
-        public static T GetAttribute<T>(MemberInfo p) where T : Attribute => GetCustomAttributes(p).First(a => a.Instance.GetType() == typeof(T)).Instance as T;
+        public static T GetAttribute<T>(MemberInfo p) where T : Attribute
+        {
+            return GetCustomAttributes(p).First(a => a.Instance.GetType() == typeof(T)).Instance as T;
+        }
 
         /// <summary>
         /// Gets all attribute instances from the current member
@@ -104,7 +107,10 @@ namespace Penguin.Reflection
         /// <typeparam name="T">The type to check for</typeparam>
         /// <param name="p">The member to check</param>
         /// <returns>Does the member declare this attribute?</returns>
-        public static bool HasAttribute<T>(MemberInfo p) where T : Attribute => GetCustomAttributes(p).Any(a => a.Instance.GetType() == typeof(T));
+        public static bool HasAttribute<T>(MemberInfo p) where T : Attribute
+        {
+            return GetCustomAttributes(p).Any(a => a.Instance.GetType() == typeof(T));
+        }
 
         /// <summary>
         /// Checks to see if the given member contains an attribute of a specified type
@@ -112,6 +118,9 @@ namespace Penguin.Reflection
         /// <param name="p">The member to check</param>
         /// <param name="t">The type to check for</param>
         /// <returns>Does the member declare this attribute?</returns>
-        public static bool HasAttribute(MemberInfo p, Type t) => GetCustomAttributes(p).Any(a => a.Instance.GetType() == t);
+        public static bool HasAttribute(MemberInfo p, Type t)
+        {
+            return GetCustomAttributes(p).Any(a => a.Instance.GetType() == t);
+        }
     }
 }
