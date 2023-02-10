@@ -389,10 +389,10 @@ namespace Penguin.Reflection
                 throw new ArgumentException($"Type to check for can not be interface as this method uses 'IsSubclassOf'. To search for interfaces use {nameof(GetAllImplementations)}");
             }
 
-            if (DerivedTypes.ContainsKey(t))
+            if (DerivedTypes.TryGetValue(t, out ICollection<Type> value))
             {
                 StaticLogger.Log($"RE: Using cached derived types for {FriendlyTypeName(t)}", StaticLogger.LoggingLevel.Method);
-                foreach (Type toReturn in DerivedTypes[t])
+                foreach (Type toReturn in value)
                 {
                     yield return toReturn;
                 }
