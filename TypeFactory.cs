@@ -29,18 +29,8 @@ namespace Penguin.Reflection
             StaticLogger.Log($"Penguin.Reflection: {Assembly.GetExecutingAssembly().GetName().Version}", StaticLogger.LoggingLevel.Call);
 
             List<string> failedCache = LoadFailedCache();
-            List<string> blacklist;
-
-            if (!TypeFactoryGlobalSettings.DisableFailedLoadSkip)
-            {
-                blacklist = LoadBlacklistCache();
-            }
-            else
-            {
-                blacklist = new List<string>();
-            }
-
-            Dictionary<string, Assembly> loadedPaths = new Dictionary<string, Assembly>();
+            List<string> blacklist = !TypeFactoryGlobalSettings.DisableFailedLoadSkip ? LoadBlacklistCache() : new List<string>();
+            Dictionary<string, Assembly> loadedPaths = new();
 
             //Map out the loaded assemblies so we can find them by path
             foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies())
@@ -54,9 +44,9 @@ namespace Penguin.Reflection
                 }
             }
 
-            List<string> referencedPaths = new List<string>();
+            List<string> referencedPaths = new();
 
-            List<string> searchPaths = new List<string>()
+            List<string> searchPaths = new()
             {
                 AppDomain.CurrentDomain.BaseDirectory
             };
@@ -69,7 +59,7 @@ namespace Penguin.Reflection
             //We're going to add the paths to the loaded assemblies here so we can double
             //back and ensure we're building the dependencies for the loaded assemblies that
             //do NOT reside in the EXE/Bin directories
-            HashSet<string> SearchedPaths = new HashSet<string>();
+            HashSet<string> SearchedPaths = new();
 
             foreach (string searchPath in searchPaths)
             {
@@ -120,7 +110,7 @@ namespace Penguin.Reflection
                         }
                     }
 
-                    if (!(a is null))
+                    if (a is not null)
                     {
                         AddReferenceInformation(a);
                     }
@@ -401,7 +391,7 @@ namespace Penguin.Reflection
             {
                 StaticLogger.Log($"RE: Searching for derived types for {FriendlyTypeName(t)}", StaticLogger.LoggingLevel.Call);
 
-                List<Type> typesToReturn = new List<Type>();
+                List<Type> typesToReturn = new();
 
                 foreach (Type type in GetDependentAssemblies(t).GetAllTypes())
                 {
@@ -442,12 +432,7 @@ namespace Penguin.Reflection
         /// <returns>The most derived type, or error if branching tree</returns>
         public static Type GetMostDerivedType(Type t)
         {
-            if (t is null)
-            {
-                throw new ArgumentNullException(nameof(t));
-            }
-
-            return GetMostDerivedType(GetDerivedTypes(t).ToList(), t);
+            return t is null ? throw new ArgumentNullException(nameof(t)) : GetMostDerivedType(GetDerivedTypes(t).ToList(), t);
         }
 
         /// <summary>
@@ -458,12 +443,7 @@ namespace Penguin.Reflection
         /// <returns>The most derived type out of the list</returns>
         public static Type GetMostDerivedType(IEnumerable<Type> types, Type t)
         {
-            if (types is null)
-            {
-                throw new ArgumentNullException(nameof(types));
-            }
-
-            return GetMostDerivedType(types.ToList(), t);
+            return types is null ? throw new ArgumentNullException(nameof(types)) : GetMostDerivedType(types.ToList(), t);
         }
 
         /// <summary>
@@ -484,7 +464,7 @@ namespace Penguin.Reflection
                 throw new ArgumentNullException(nameof(t));
             }
 
-            List<Type> toProcess = types.Where(tt => t.IsAssignableFrom(tt)).ToList();
+            List<Type> toProcess = types.Where(t.IsAssignableFrom).ToList();
 
             foreach (Type toCheckA in toProcess.ToList())
             {
@@ -498,12 +478,9 @@ namespace Penguin.Reflection
                 }
             }
 
-            if (toProcess.Count > 1)
-            {
-                throw new Exception($"More than one terminating type found for base {t.FullName}");
-            }
-
-            return toProcess.FirstOrDefault() ?? t;
+            return toProcess.Count > 1
+                ? throw new Exception($"More than one terminating type found for base {t.FullName}")
+                : toProcess.FirstOrDefault() ?? t;
         }
 
         /// <summary>
@@ -590,9 +567,9 @@ namespace Penguin.Reflection
 
                 if (includeDerived)
                 {
-                    List<Type> derivedTypes = new List<Type>();
+                    List<Type> derivedTypes = new();
 
-                    derivedTypes.AddRange(matching.Select(m => GetDerivedTypes(m)).SelectMany(m => m));
+                    derivedTypes.AddRange(matching.Select(GetDerivedTypes).SelectMany(m => m));
 
                     matching.AddRange(derivedTypes);
                 }
@@ -624,7 +601,7 @@ namespace Penguin.Reflection
                 }
                 else
                 {
-                    ConcurrentDictionary<string, Type> namespaceDictionary = new ConcurrentDictionary<string, Type>();
+                    ConcurrentDictionary<string, Type> namespaceDictionary = new();
                     _ = namespaceDictionary.TryAdd(targetNamespace, targetType);
 
                     _ = TypeMapping.TryAdd(name, namespaceDictionary);
@@ -687,7 +664,7 @@ namespace Penguin.Reflection
             {
                 string BlacklistFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, BLACKLIST_CACHE);
 
-                List<string> blacklist = new List<string>();
+                List<string> blacklist = new();
 
                 if (File.Exists(BlacklistFile))
                 {
@@ -708,7 +685,7 @@ namespace Penguin.Reflection
 
         internal static List<string> LoadFailedCache()
         {
-            List<string> failedCache = new List<string>();
+            List<string> failedCache = new();
 
             if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FAILED_CACHE)))
             {
@@ -718,12 +695,12 @@ namespace Penguin.Reflection
             return failedCache;
         }
 
-        private static readonly HashSet<string> CurrentlyLoadedAssemblies = new HashSet<string>();
-        private static readonly ConcurrentDictionary<string, Assembly> AssembliesByName = new ConcurrentDictionary<string, Assembly>();
-        private static readonly ConcurrentDictionary<string, List<Assembly>> AssembliesThatReference = new ConcurrentDictionary<string, List<Assembly>>();
-        private static readonly ConcurrentDictionary<string, AssemblyDefinition> AssemblyTypes = new ConcurrentDictionary<string, AssemblyDefinition>();
-        private static readonly ConcurrentDictionary<Type, ICollection<Type>> DerivedTypes = new ConcurrentDictionary<Type, ICollection<Type>>();
-        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Type>> TypeMapping = new ConcurrentDictionary<string, ConcurrentDictionary<string, Type>>();
+        private static readonly HashSet<string> CurrentlyLoadedAssemblies = new();
+        private static readonly ConcurrentDictionary<string, Assembly> AssembliesByName = new();
+        private static readonly ConcurrentDictionary<string, List<Assembly>> AssembliesThatReference = new();
+        private static readonly ConcurrentDictionary<string, AssemblyDefinition> AssemblyTypes = new();
+        private static readonly ConcurrentDictionary<Type, ICollection<Type>> DerivedTypes = new();
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Type>> TypeMapping = new();
 
         private static void AddReferenceInformation(Assembly a)
         {
@@ -798,11 +775,11 @@ namespace Penguin.Reflection
 
         private static Type[] GetTypeByFullName(string className)
         {
-            List<Type> returnVal = new List<Type>();
+            List<Type> returnVal = new();
 
             foreach (Type t in GetAllTypes())
             {
-                if (string.Equals(t.FullName, className, StringComparison.InvariantCultureIgnoreCase))
+                if (string.Equals(t.FullName, className, StringComparison.OrdinalIgnoreCase))
                 {
                     returnVal.Add(t);
                 }

@@ -42,7 +42,7 @@ namespace Penguin.Reflection
                 return cachedAttributes;
             }
 
-            List<AttributeInstance> attributes = new List<AttributeInstance>();
+            List<AttributeInstance> attributes = new();
 
             if (p is PropertyInfo)
             {

@@ -8,6 +8,6 @@
         /// <summary>
         /// If true, doesn't attempt to skip assemblies for which the previous load has failed (Default false)
         /// </summary>
-        public static bool DisableFailedLoadSkip { get; set; } = false;
+        public static bool DisableFailedLoadSkip { get; set; }
     }
 }
