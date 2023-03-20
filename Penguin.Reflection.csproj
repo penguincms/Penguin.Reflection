@@ -2,7 +2,7 @@
   <Import Project="Penguin.Projects.Shared\Penguin.Projects.Shared.csproj" />
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1</TargetFrameworks>
-    <PackageProjectUrl>https://github.com/PenguinCMS/Penguin.Reflection</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/PenguinCms/Penguin.Reflection</PackageProjectUrl>
     <Version>5.0.5</Version>
     <Description>Super helpful Reflection methods for Caching, as well as a static class designed to greatly simplify and speed up reflective searching. Supports (requires, for now) whitelisting assemblies and provides methods such as GetAllImplementations, GetAllTypes, GetDerivedTypes, GetMostDerivedType, GetTypeByFullName and more. Very helpful in MetaData driven systems.</Description>
     <AssemblyName>Penguin.Reflection</AssemblyName>
